@@ -10,7 +10,7 @@ from reaper_process import ReaperProcessManager
 from session_manager import SessionManager
 from parameter_sweep import ParameterSweepEngine
 from lua_interface import LuaScriptInterface
-from vision_debugger import VisionDebugger, VISION_AVAILABLE
+
 
 
 @dataclass
@@ -27,23 +27,12 @@ class WorkflowResult:
 class WorkflowOrchestrator:
     """Orchestrates complete automation workflows."""
 
-    def __init__(self, system_config: SystemConfig, enable_vision_debug: bool = False):
+    def __init__(self, system_config: SystemConfig):
         self.system_config = system_config
         self.process_manager = ReaperProcessManager(system_config)
         self.session_manager = SessionManager()
         self.lua_interface = LuaScriptInterface(system_config.beacon_file)
         self.sweep_engine = ParameterSweepEngine()
-
-        # Vision debugging
-        self.vision_debugger = None
-        if enable_vision_debug and VISION_AVAILABLE:
-            try:
-                self.vision_debugger = VisionDebugger()
-                print("Vision debugging enabled")
-            except ImportError as e:
-                print(f"Vision debugging not available: {e}")
-        elif enable_vision_debug:
-            print("Vision debugging requested but not available (missing dependencies)")
 
     def run_single_parameter_session(self,
                                    session_id: str,
@@ -90,44 +79,8 @@ class WorkflowOrchestrator:
                     error_message="Failed to start REAPER"
                 )
 
-            # Capture initial state if vision debugging enabled
-            if self.vision_debugger:
-                self.vision_debugger.capture_screenshot(
-                    session_id=session_id,
-                    description=f"Session start - {parameters}"
-                )
-
-            # Wait for workflow completion with optional vision monitoring
-            if self.vision_debugger:
-                # Monitor with vision debugging
-                import threading
-
-                # Start beacon monitoring in background
-                captures = []
-                def monitor_with_vision():
-                    nonlocal captures
-                    captures = self.vision_debugger.monitor_beacon_and_capture(
-                        beacon_file=self.system_config.beacon_file,
-                        session_id=session_id,
-                        capture_interval=3.0,
-                        timeout=120.0
-                    )
-
-                monitor_thread = threading.Thread(target=monitor_with_vision)
-                monitor_thread.start()
-
-                success, beacon_data = self.lua_interface.wait_for_completion(timeout_seconds=120)
-
-                monitor_thread.join(timeout=5)  # Wait briefly for monitoring to finish
-            else:
-                success, beacon_data = self.lua_interface.wait_for_completion(timeout_seconds=120)
-
-            # Capture final state if vision debugging enabled
-            if self.vision_debugger:
-                self.vision_debugger.capture_screenshot(
-                    session_id=session_id,
-                    description=f"Session end - {'SUCCESS' if success else 'FAILED'}"
-                )
+            # Wait for workflow completion
+            success, beacon_data = self.lua_interface.wait_for_completion(timeout_seconds=120)
 
             # Stop REAPER
             self.process_manager.stop_reaper()
@@ -135,12 +88,7 @@ class WorkflowOrchestrator:
             # Clean up beacon file
             self.lua_interface.clear_beacon_file()
 
-            # Generate debug report if vision debugging was used
-            if self.vision_debugger:
-                try:
-                    self.vision_debugger.create_debug_report(session_id)
-                except Exception as e:
-                    print(f"Warning: Could not create vision debug report: {e}")
+
 
             # Collect artifacts
             artifacts = self.session_manager.collect_session_artifacts(session_id)
@@ -301,8 +249,8 @@ class WorkflowOrchestrator:
 class MultiParameterWorkflowOrchestrator(WorkflowOrchestrator):
     """Extended orchestrator for multi-parameter workflows."""
 
-    def __init__(self, system_config: SystemConfig, enable_vision_debug: bool = False):
-        super().__init__(system_config, enable_vision_debug)
+    def __init__(self, system_config: SystemConfig):
+        super().__init__(system_config)
 
     def run_multi_parameter_sweep(self,
                                  parameters: List[ParameterSpec],
