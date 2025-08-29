@@ -1,0 +1,38 @@
+{
+  "a_octave_oct": {
+    "type": "AudioProcessorParameter",
+    "range_min": -4.0,
+    "range_max": 4.0,
+    "range_step": 1.0,
+    "is_discrete": true,
+    "label": "Oct",
+    "units": "Oct"
+  },
+  "a_fine_cents": {
+    "type": "AudioProcessorParameter",
+    "range_min": -100.0,
+    "range_max": 100.0,
+    "range_step": 1.0,
+    "is_discrete": true,
+    "label": "cents",
+    "units": "cents"
+  },
+  "bend_u_semitones": {
+    "type": "AudioProcessorParameter",
+    "range_min": -24.0,
+    "range_max": 24.0,
+    "range_step": 1.0,
+    "is_discrete": true,
+    "label": "semitones",
+    "units": "semitones"
+  },
+  "bend_d_semitones": {
+    "type": "AudioProcessorParameter",
+    "range_min": -24.0,
+    "range_max": 24.0,
+    "range_step": 1.0,
+    "is_discrete": true,
+    "label": "semitones",
+    "units": "semitones"
+  }
+}

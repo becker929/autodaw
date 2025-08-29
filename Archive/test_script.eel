@@ -1,0 +1,8 @@
+// Simple EEL test script to verify command line execution works
+ShowConsoleMsg("=== EEL Script Execution Started ===\n");
+
+track_count = CountTracks(0);
+ShowConsoleMsg(sprintf(#, "Number of tracks: %d\n", track_count));
+
+ShowConsoleMsg("=== EEL Script Execution Completed ===\n");
+
