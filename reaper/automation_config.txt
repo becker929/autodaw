@@ -1,0 +1,5 @@
+workflow_mode=full
+target_parameter=octave
+parameter_value=2.0
+session_id=5
+output_dir=/Users/anthonybecker/Desktop/evolver_sessions/session_5

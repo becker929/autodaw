@@ -1,0 +1,12 @@
+[project]
+name = "reaper"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "black>=25.1.0",
+    "reapy-boost>=0.10.201",
+    "rpp>=0.5",
+    "typing-extensions",
+    "librosa>=0.10.0",
+    "numpy>=1.21.0",
+]
