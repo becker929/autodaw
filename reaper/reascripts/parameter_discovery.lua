@@ -23,26 +23,26 @@ end
 function discover_parameter_ranges(track, fx_index)
     local param_count = reaper.TrackFX_GetNumParams(track, fx_index)
     local ranges = {}
-    
+
     print("Discovering " .. param_count .. " parameters...")
-    
+
     for i = 0, param_count - 1 do
         local retval, param_name = reaper.TrackFX_GetParamName(track, fx_index, i, "")
         if retval then
             -- Get current value
             local current_value = reaper.TrackFX_GetParam(track, fx_index, i)
             local retval_current, current_formatted = reaper.TrackFX_GetFormattedParamValue(track, fx_index, i, "")
-            
+
             -- Test parameter bounds by setting extreme values
             reaper.TrackFX_SetParam(track, fx_index, i, 0.0)
             local retval_min, min_formatted = reaper.TrackFX_GetFormattedParamValue(track, fx_index, i, "")
-            
+
             reaper.TrackFX_SetParam(track, fx_index, i, 1.0)
             local retval_max, max_formatted = reaper.TrackFX_GetFormattedParamValue(track, fx_index, i, "")
-            
+
             -- Restore original value
             reaper.TrackFX_SetParam(track, fx_index, i, current_value)
-            
+
             -- Store parameter info
             ranges[i] = {
                 index = i,
@@ -54,19 +54,19 @@ function discover_parameter_ranges(track, fx_index)
                 min_formatted = min_formatted or "N/A",
                 max_formatted = max_formatted or "N/A"
             }
-            
+
             print("Parameter " .. i .. ": " .. param_name .. " = " .. current_value .. " (" .. (current_formatted or "N/A") .. ")")
             print("  Range: " .. (min_formatted or "N/A") .. " to " .. (max_formatted or "N/A"))
         end
     end
-    
+
     return ranges
 end
 
 function save_parameter_discovery(ranges, session_id, output_dir)
     local timestamp = os.date("%Y%m%d_%H%M%S")
     local filename = output_dir .. "/parameter_discovery_session" .. session_id .. "_" .. timestamp .. ".json"
-    
+
     local file = io.open(filename, "w")
     if file then
         file:write("{\n")
@@ -74,7 +74,7 @@ function save_parameter_discovery(ranges, session_id, output_dir)
         file:write('  "session_id": "' .. session_id .. '",\n')
         file:write('  "parameter_count": ' .. #ranges .. ',\n')
         file:write('  "parameters": {\n')
-        
+
         local param_entries = {}
         for i, param in pairs(ranges) do
             local entry = string.format(
@@ -93,11 +93,11 @@ function save_parameter_discovery(ranges, session_id, output_dir)
             )
             table.insert(param_entries, entry)
         end
-        
+
         file:write(table.concat(param_entries, ",\n"))
         file:write('\n  }\n}')
         file:close()
-        
+
         print("Parameter discovery saved to: " .. filename)
         return filename
     else
@@ -113,7 +113,7 @@ function read_config()
         print("ERROR: Config file not found")
         return nil
     end
-    
+
     local config_data = {}
     for line in file:lines() do
         local key, value = line:match("^([^=]+)=(.*)$")
@@ -122,22 +122,22 @@ function read_config()
         end
     end
     file:close()
-    
+
     return config_data
 end
 
 function main()
     update_beacon("STARTED", "Parameter discovery starting")
-    
+
     local config_data = read_config()
     if not config_data then
         update_beacon("ERROR", "Could not read configuration")
         return
     end
-    
+
     local session_id = config_data.session_id or "unknown"
     local output_dir = config_data.output_dir or "/Users/anthonybecker/Desktop"
-    
+
     local track = reaper.GetTrack(0, 0)
     if not track then
         update_beacon("ERROR", "No tracks found in project")
@@ -159,19 +159,19 @@ function main()
 
     print("Discovering parameters for FX: " .. fx_name)
     update_beacon("RUNNING", "Discovering parameters for " .. fx_name)
-    
+
     -- Discover parameter ranges
     local ranges = discover_parameter_ranges(track, fx_index)
-    
+
     -- Save discovery results
     local saved_file = save_parameter_discovery(ranges, session_id, output_dir)
-    
+
     if saved_file then
         update_beacon("COMPLETED", "Parameter discovery completed, saved to " .. saved_file)
     else
         update_beacon("ERROR", "Parameter discovery completed but could not save results")
     end
-    
+
     -- Update project
     reaper.UpdateArrange()
 end

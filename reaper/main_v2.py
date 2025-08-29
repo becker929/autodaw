@@ -18,7 +18,7 @@ from parameter_sweep import COMMON_PARAMETERS
 
 def main():
     """Main entry point with clean architecture."""
-    
+
     # Initialize system configuration
     try:
         system_config = SystemConfig()
@@ -27,48 +27,57 @@ def main():
         print(f"System configuration error: {e}")
         print("Please check REAPER installation and startup script configuration.")
         return 1
-    
+
     # Create orchestrator
     orchestrator = MultiParameterWorkflowOrchestrator(system_config)
-    
+
     # Handle command line arguments
     if len(sys.argv) > 1:
         command = sys.argv[1]
-        
+
         if command == "octave-sweep":
             # Classic octave sweep (backward compatibility)
-            project_file = Path(sys.argv[2]) if len(sys.argv) > 2 else None
+            project_file = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("data/serum/serum1.RPP")
+            if not project_file.exists():
+                print(f"Project file not found: {project_file}")
+                return 1
             results = orchestrator.run_octave_sweep(project_file)
             return 0 if all(r.success for r in results) else 1
-            
+
         elif command == "discover":
             # Parameter discovery
-            project_file = Path(sys.argv[2]) if len(sys.argv) > 2 else None
+            project_file = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("data/serum/serum1.RPP")
+            if not project_file.exists():
+                print(f"Project file not found: {project_file}")
+                return 1
             success = orchestrator.discover_parameters(project_file)
             return 0 if success else 1
-            
+
         elif command == "multi-param":
             # Multi-parameter sweep example
-            project_file = Path(sys.argv[2]) if len(sys.argv) > 2 else None
+            project_file = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("data/serum/serum1.RPP")
+            if not project_file.exists():
+                print(f"Project file not found: {project_file}")
+                return 1
             results = orchestrator.run_filter_and_envelope_sweep(project_file)
             return 0 if all(r.success for r in results) else 1
-            
+
         elif command == "custom-sweep":
             # Custom parameter sweep
             if len(sys.argv) < 3:
                 print("Usage: main_v2.py custom-sweep <param1:min:max:steps> [param2:min:max:steps] ...")
                 return 1
-                
+
             try:
                 parameters = []
                 for param_spec in sys.argv[2:]:
                     if param_spec.startswith("--"):
                         break  # Stop at options
-                        
+
                     parts = param_spec.split(":")
                     if len(parts) != 4:
                         raise ValueError(f"Invalid parameter spec: {param_spec}")
-                        
+
                     name, min_val, max_val, steps = parts
                     parameters.append(ParameterSpec(
                         name=name,
@@ -76,30 +85,38 @@ def main():
                         max_value=float(max_val),
                         steps=int(steps)
                     ))
-                
+
                 # Look for project file option
-                project_file = None
+                project_file = Path("data/serum/serum1.RPP")  # Default
                 for i, arg in enumerate(sys.argv):
                     if arg == "--project" and i + 1 < len(sys.argv):
                         project_file = Path(sys.argv[i + 1])
                         break
                 
+                if not project_file.exists():
+                    print(f"Project file not found: {project_file}")
+                    return 1
+
                 results = orchestrator.run_multi_parameter_sweep(
                     parameters=parameters,
                     project_file=project_file
                 )
                 return 0 if all(r.success for r in results) else 1
-                
+
             except Exception as e:
                 print(f"Error parsing custom sweep parameters: {e}")
                 return 1
-                
+
         else:
             print_usage()
             return 1
     else:
-        # Default: run octave sweep
+        # Default: run octave sweep with default project
         default_project = Path("data/serum/serum1.RPP")
+        if not default_project.exists():
+            print(f"Default project file not found: {default_project}")
+            print("Please specify a project file or ensure the default project exists.")
+            return 1
         results = orchestrator.run_octave_sweep(default_project)
         return 0 if all(r.success for r in results) else 1
 
