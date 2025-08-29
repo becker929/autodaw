@@ -28,8 +28,13 @@ def main():
         print("Please check REAPER installation and startup script configuration.")
         return 1
 
+    # Check for vision debug flag
+    enable_vision = "--vision-debug" in sys.argv
+    if enable_vision:
+        sys.argv.remove("--vision-debug")  # Remove flag from args
+
     # Create orchestrator
-    orchestrator = MultiParameterWorkflowOrchestrator(system_config)
+    orchestrator = MultiParameterWorkflowOrchestrator(system_config, enable_vision_debug=enable_vision)
 
     # Handle command line arguments
     if len(sys.argv) > 1:
@@ -62,6 +67,14 @@ def main():
             results = orchestrator.run_filter_and_envelope_sweep(project_file)
             return 0 if all(r.success for r in results) else 1
 
+        elif command == "vision-debug":
+            # Standalone vision debugging - pass remaining args to vision debugger
+            vision_args = sys.argv[2:]  # Get args after 'vision-debug'
+            import sys as vision_sys
+            vision_sys.argv = ['vision_debugger.py'] + vision_args
+            from src.vision_debugger import main as vision_main
+            return vision_main()
+
         elif command == "custom-sweep":
             # Custom parameter sweep
             if len(sys.argv) < 3:
@@ -92,7 +105,7 @@ def main():
                     if arg == "--project" and i + 1 < len(sys.argv):
                         project_file = Path(sys.argv[i + 1])
                         break
-                
+
                 if not project_file.exists():
                     print(f"Project file not found: {project_file}")
                     return 1
@@ -134,6 +147,7 @@ def print_usage():
     print("  discover [project]               Discover VST parameters")
     print("  multi-param [project]            Run filter cutoff + attack envelope sweep")
     print("  custom-sweep <specs> [options]   Custom parameter sweep")
+    print("  vision-debug <subcommand>        Vision debugging tools")
     print()
     print("Custom sweep parameter specs:")
     print("  <param_name>:<min>:<max>:<steps>")
@@ -141,12 +155,17 @@ def print_usage():
     print()
     print("Options:")
     print("  --project <path>                 Project file to use")
+    print("  --vision-debug                   Enable vision debugging for all commands")
     print()
     print("Examples:")
     print("  uv run main_v2.py octave-sweep")
     print("  uv run main_v2.py discover data/serum/serum1.RPP")
     print("  uv run main_v2.py custom-sweep octave:-1:1:3 --project data/serum/serum1.RPP")
     print("  uv run main_v2.py multi-param")
+    print("  uv run main_v2.py octave-sweep --vision-debug")
+    print("  uv run main_v2.py vision-debug screenshot")
+    print("  uv run main_v2.py vision-debug reaper")
+    print("  uv run main_v2.py vision-debug analyze")
     print()
     print("Available common parameters:")
     for name, spec in COMMON_PARAMETERS.items():
