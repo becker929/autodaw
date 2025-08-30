@@ -13,7 +13,7 @@ from typing import List
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from config import (SystemConfig, ParameterSpec, SweepConfiguration, ConfigManager, 
+from config import (SystemConfig, ParameterSpec, SweepConfiguration, ConfigManager,
                    SessionConfig, setup_session_logging, get_logger)
 from workflow_orchestrator import WorkflowOrchestrator, MultiParameterWorkflowOrchestrator
 from parameter_sweep import COMMON_PARAMETERS
@@ -60,10 +60,10 @@ def run_session_workflow(orchestrator: MultiParameterWorkflowOrchestrator, sessi
 
         # Set up session structure with timestamp-based naming
         session_run_name = session_config.get_session_run_dir()
-        base_session_dir = Path("./sessions")
+        base_session_dir = Path("./sessions/runs")
         session_dir = base_session_dir / session_run_name
         session_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Create organized subdirectories
         (session_dir / "midi").mkdir(exist_ok=True)
         (session_dir / "params").mkdir(exist_ok=True)
@@ -72,7 +72,7 @@ def run_session_workflow(orchestrator: MultiParameterWorkflowOrchestrator, sessi
         # Set up session-specific logging (all logs go in session directory)
         from config import setup_session_logging
         setup_session_logging(log_level="DEBUG", session_dir=session_dir, enable_file_logging=True)
-        
+
         # Get session-specific logger
         session_logger = logging.getLogger(f"session_{session_config.session_id}")
 

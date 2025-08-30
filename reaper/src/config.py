@@ -18,7 +18,7 @@ class AutomationConfig:
     target_parameter: str = "octave"
     parameter_value: float = 0.0
     session_id: str = "1"
-    output_dir: Path = Path("./sessions")
+    output_dir: Path = Path("./sessions/runs")
 
     @classmethod
     def from_file(cls, config_path: Path) -> 'AutomationConfig':
@@ -185,7 +185,7 @@ class SessionConfig:
     project_file: Optional[str] = None
     renders: List[RenderConfig] = field(default_factory=list)
     global_midi_config: Optional[MIDIConfig] = None
-    output_directory: str = "./sessions"
+    output_directory: str = "./sessions/runs"
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -456,12 +456,12 @@ def create_serum_parameter_sweep(session_name: str,
     return config
 
 
-def setup_session_logging(log_level: str = "DEBUG", 
+def setup_session_logging(log_level: str = "DEBUG",
                           session_dir: Optional[Path] = None,
                           enable_file_logging: bool = True) -> None:
     """
     Set up logging configuration for a specific session.
-    
+
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         session_dir: Session directory for log files. If None, logs only to console
@@ -469,14 +469,14 @@ def setup_session_logging(log_level: str = "DEBUG",
     """
     # Convert string level to logging constant
     numeric_level = getattr(logging, log_level.upper(), logging.DEBUG)
-    
+
     # Configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(numeric_level)
-    
+
     # Clear existing handlers
     root_logger.handlers.clear()
-    
+
     # Create detailed formatter
     detailed_formatter = logging.Formatter(
         '%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
@@ -498,7 +498,7 @@ def setup_session_logging(log_level: str = "DEBUG",
         file_handler.setFormatter(detailed_formatter)
         file_handler.setLevel(logging.DEBUG)
         root_logger.addHandler(file_handler)
-        
+
         # Debug-only log in session directory
         debug_file = session_dir / "debug.log"
         debug_handler = logging.handlers.RotatingFileHandler(

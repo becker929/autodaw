@@ -40,7 +40,7 @@ class SessionArtifacts:
 class SessionManager:
     """Manages automation sessions and their artifacts."""
 
-    def __init__(self, base_output_dir: Path = Path("./sessions")):
+    def __init__(self, base_output_dir: Path = Path("./sessions/runs")):
         self.base_output_dir = base_output_dir
         logger.info(f"SessionManager initialized with unified base_dir: {base_output_dir}")
         logger.debug(f"Base directory exists: {base_output_dir.exists()}")
