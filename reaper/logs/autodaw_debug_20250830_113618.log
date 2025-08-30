@@ -1,0 +1,15 @@
+2025-08-30 11:36:18.396 - config - DEBUG - setup_global_logging:520 - Log directory: logs
+2025-08-30 11:36:18.396 - __main__ - DEBUG - get_logger:534 - Logger '__main__' requested
+2025-08-30 11:36:18.396 - __main__ - DEBUG - main:208 - Command line arguments: ['main.py', '--help']
+2025-08-30 11:36:18.396 - __main__ - DEBUG - main:212 - Initializing system configuration
+2025-08-30 11:36:18.396 - __main__ - DEBUG - main:214 - System config created: reaper_path=/Applications/REAPER.app/Contents/MacOS/REAPER
+2025-08-30 11:36:18.396 - __main__ - DEBUG - main:224 - Creating MultiParameterWorkflowOrchestrator
+2025-08-30 11:36:18.396 - workflow_orchestrator - DEBUG - __init__:37 - System config: reaper_path=/Applications/REAPER.app/Contents/MacOS/REAPER
+2025-08-30 11:36:18.396 - workflow_orchestrator - DEBUG - __init__:39 - Creating ReaperProcessManager
+2025-08-30 11:36:18.397 - reaper_process - DEBUG - __init__:23 - REAPER path exists: True
+2025-08-30 11:36:18.397 - workflow_orchestrator - DEBUG - __init__:42 - Creating SessionManager
+2025-08-30 11:36:18.397 - session_manager - DEBUG - __init__:46 - Base output directory exists: True
+2025-08-30 11:36:18.397 - workflow_orchestrator - DEBUG - __init__:45 - Creating LuaScriptInterface with beacon_file=reaper_automation_beacon.txt
+2025-08-30 11:36:18.397 - lua_interface - DEBUG - __init__:87 - Beacon file exists: False
+2025-08-30 11:36:18.397 - workflow_orchestrator - DEBUG - __init__:48 - Creating ParameterSweepEngine
+2025-08-30 11:36:18.397 - parameter_sweep - DEBUG - __init__:79 - Initializing ParameterSweepEngine

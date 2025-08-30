@@ -136,7 +136,7 @@ function main()
     end
 
     local session_id = config_data.session_id or "unknown"
-    local output_dir = config_data.output_dir or "/Users/anthonybecker/Desktop"
+    local output_dir = config_data.output_dir or "outputs"
 
     local track = reaper.GetTrack(0, 0)
     if not track then

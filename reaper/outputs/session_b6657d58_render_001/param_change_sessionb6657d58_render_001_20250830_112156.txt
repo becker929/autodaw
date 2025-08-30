@@ -1,0 +1,14 @@
+Parameter Change Log - Session b6657d58_render_001
+Timestamp: 2025-08-30 11:21:56
+FX: VST3i: Serum (Xfer Records)
+Target parameter value: 0.55770719383153
+============================================================
+
+Found octave parameter: A Octave (index 3)
+Original value: 0.500000 ( 0)
+Target octave: 0.56
+Normalized value: 0.569713
+Current value: 0.569713 (+1)
+Change success: YES
+
+Octave parameter change completed.

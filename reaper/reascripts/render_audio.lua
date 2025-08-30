@@ -15,10 +15,10 @@ function main()
     print("Rendering project: " .. (project_path or "Untitled"))
 
         -- Read session config for filename
-    local config_file = "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/automation_config.txt"
+    local config_file = "automation_config.txt"
     local session_id = "unknown"
-    local octave_value = "0.0"
-    local output_dir = "/Users/anthonybecker/Desktop"
+    local render_name = "render"
+    local output_dir = "outputs"
 
     local file = io.open(config_file, "r")
     if file then
@@ -26,8 +26,8 @@ function main()
             local key, value = line:match("^([^=]+)=(.*)$")
             if key == "session_id" then
                 session_id = value
-            elseif key == "parameter_value" then
-                octave_value = value
+            elseif key == "render_name" then
+                render_name = value
             elseif key == "output_dir" then
                 output_dir = value
             end
@@ -35,19 +35,32 @@ function main()
         file:close()
     end
 
-    -- Set up render settings with session info
+    -- Set up render settings with improved directory structure
     local timestamp = os.date("%Y%m%d_%H%M%S")
-    local output_filename = "rendered_audio_session" .. session_id .. "_octave" .. octave_value .. "_" .. timestamp .. ".wav"
-    local full_output_path = output_dir .. "/" .. output_filename
+    local session_dir = output_dir .. "/session_" .. session_id
+    local renders_dir = session_dir .. "/renders"
+
+    -- Create directories if they don't exist
+    os.execute("mkdir -p \"" .. renders_dir .. "\"")
+
+        local output_filename = "session" .. session_id .. "_" .. render_name .. "_" .. timestamp .. ".wav"
+    local full_output_path = renders_dir .. "/" .. output_filename
+
+    -- Create logs directory if it doesn't exist
+    os.execute("mkdir -p \"" .. session_dir .. "/logs" .. "\"")
 
     -- Documentation
-    local doc_file = io.open(output_dir .. "/render_log_session" .. session_id .. "_" .. timestamp .. ".txt", "w")
-    doc_file:write("Audio Render Log - Session " .. session_id .. "\n")
-    doc_file:write("Timestamp: " .. os.date("%Y-%m-%d %H:%M:%S") .. "\n")
-    doc_file:write("Project: " .. (project_path or "Untitled") .. "\n")
-    doc_file:write("Octave Value: " .. octave_value .. "\n")
-    doc_file:write("Output: " .. full_output_path .. "\n")
-    doc_file:write(string.rep("=", 60) .. "\n\n")
+    local doc_file = io.open(session_dir .. "/logs/render_log_" .. render_name .. "_" .. timestamp .. ".txt", "w")
+    if doc_file then
+        doc_file:write("Audio Render Log - Session " .. session_id .. "\n")
+        doc_file:write("Timestamp: " .. os.date("%Y-%m-%d %H:%M:%S") .. "\n")
+        doc_file:write("Project: " .. (project_path or "Untitled") .. "\n")
+        doc_file:write("Render Name: " .. render_name .. "\n")
+        doc_file:write("Output: " .. full_output_path .. "\n")
+        doc_file:write(string.rep("=", 60) .. "\n\n")
+    else
+        print("Warning: Could not create log file")
+    end
 
     -- Get project timeline info
     local start_time, end_time = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
@@ -165,10 +178,11 @@ function main()
         print("ERROR: Render failed or timed out")
     end
 
-    doc_file:write("\nRender operation completed.\n")
-    doc_file:close()
-
-    print("Render documentation saved to: render_log_session" .. session_id .. "_" .. timestamp .. ".txt")
+    if doc_file then
+        doc_file:write("\nRender operation completed.\n")
+        doc_file:close()
+        print("Render documentation saved to: render_log_" .. render_name .. "_" .. timestamp .. ".txt")
+    end
 
     -- Update project
     reaper.UpdateArrange()

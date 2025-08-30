@@ -40,9 +40,9 @@ function main()
     end
 
     -- Read session config for output directory
-    local config_file = "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/automation_config.txt"
+    local config_file = "automation_config.txt"
     local session_id = "unknown"
-    local output_dir = "/Users/anthonybecker/Desktop"
+    local output_dir = "outputs"
 
     local config = io.open(config_file, "r")
     if config then

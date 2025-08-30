@@ -6,7 +6,7 @@ function print(val)
 end
 
 function read_config()
-    local config_file = "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/automation_config.txt"
+    local config_file = "automation_config.txt"
     local file = io.open(config_file, "r")
     if not file then
         print("ERROR: Config file not found")
@@ -33,7 +33,7 @@ function main()
 
     local target_value = tonumber(config_data.parameter_value) or 0.0
     local session_id = config_data.session_id or "unknown"
-    local output_dir = config_data.output_dir or "/Users/anthonybecker/Desktop"
+    local output_dir = config_data.output_dir or "outputs"
 
     local track = reaper.GetTrack(0, 0)
     if not track then

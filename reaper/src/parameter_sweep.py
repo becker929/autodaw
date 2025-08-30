@@ -2,8 +2,12 @@
 
 import itertools
 import random
+import logging
 from typing import Iterator, Dict, List, Protocol
-from config import ParameterSpec, SweepConfiguration
+from config import ParameterSpec, SweepConfiguration, get_logger
+
+# Set up module logger
+logger = get_logger(__name__)
 
 
 class ParameterSweepStrategy(Protocol):
@@ -72,10 +76,12 @@ class ParameterSweepEngine:
     """Engine for generating parameter sweep combinations."""
 
     def __init__(self):
+        logger.debug("Initializing ParameterSweepEngine")
         self.strategies = {
             'grid': GridSweepStrategy(),
             'random': RandomSweepStrategy()
         }
+        logger.info(f"ParameterSweepEngine initialized with strategies: {list(self.strategies.keys())}")
 
     def add_strategy(self, name: str, strategy: ParameterSweepStrategy) -> None:
         """Add a custom sweep strategy."""
@@ -83,10 +89,15 @@ class ParameterSweepEngine:
 
     def generate_sweep(self, config: SweepConfiguration) -> Iterator[Dict[str, float]]:
         """Generate parameter sweep according to configuration."""
+        logger.info(f"Generating sweep with strategy: {config.strategy}")
+        logger.debug(f"Parameters: {[p.name for p in config.parameters]}")
+
         if config.strategy not in self.strategies:
+            logger.error(f"Unknown strategy: {config.strategy}")
             raise ValueError(f"Unknown strategy: {config.strategy}")
 
         strategy = self.strategies[config.strategy]
+        logger.debug(f"Using strategy: {type(strategy).__name__}")
         return strategy.generate_combinations(config)
 
     def estimate_combinations(self, config: SweepConfiguration) -> int:

@@ -55,10 +55,11 @@ function main()
 
     print("Adding MIDI notes to item...")
 
-        -- Read session config for filename
-    local config_file = "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/automation_config.txt"
+        -- Read session config for MIDI configuration
+    local config_file = "automation_config.txt"
     local session_id = "unknown"
-    local output_dir = "/Users/anthonybecker/Desktop"
+    local output_dir = "outputs"
+    local midi_config_file = nil
 
     local file = io.open(config_file, "r")
     if file then
@@ -68,6 +69,8 @@ function main()
                 session_id = value
             elseif key == "output_dir" then
                 output_dir = value
+            elseif key == "midi_config" then
+                midi_config_file = value
             end
         end
         file:close()
@@ -80,61 +83,73 @@ function main()
     doc_file:write("Timestamp: " .. os.date("%Y-%m-%d %H:%M:%S") .. "\n")
     doc_file:write(string.rep("=", 50) .. "\n\n")
 
-    -- Define some notes to add (C major scale pattern)
-    local notes = {
-        {pitch = 60, start = 0.0, length = 0.5, velocity = 80},   -- C4
-        {pitch = 62, start = 0.5, length = 0.5, velocity = 75},   -- D4
-        {pitch = 64, start = 1.0, length = 0.5, velocity = 85},   -- E4
-        {pitch = 65, start = 1.5, length = 0.5, velocity = 70},   -- F4
-        {pitch = 67, start = 2.0, length = 0.5, velocity = 90},   -- G4
-        {pitch = 69, start = 2.5, length = 0.5, velocity = 78},   -- A4
-        {pitch = 71, start = 3.0, length = 0.5, velocity = 82},   -- B4
-        {pitch = 72, start = 3.5, length = 0.5, velocity = 88}    -- C5
-    }
+        -- Load MIDI files from configuration
+    local midi_files = {}
+    local files_loaded = 0
 
-        local notes_added = 0
+    -- Try to load MIDI configuration from JSON file
+    if midi_config_file and io.open(midi_config_file, "r") then
+        print("Loading MIDI configuration from: " .. midi_config_file)
+        local json_content = ""
+        local json_file = io.open(midi_config_file, "r")
+        if json_file then
+            json_content = json_file:read("*all")
+            json_file:close()
 
-    for i, note in ipairs(notes) do
-        -- Convert time to PPQ position using REAPER API
-        local start_ppq = reaper.MIDI_GetPPQPosFromProjTime(take, note.start)
-        local end_ppq = reaper.MIDI_GetPPQPosFromProjTime(take, note.start + note.length)
-
-        -- Insert the note (channel 0, not selected, not muted)
-        local success = reaper.MIDI_InsertNote(take, false, false, start_ppq, end_ppq, 0, note.pitch, note.velocity, true)
-
-        if success then
-            notes_added = notes_added + 1
-            local note_name = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}
-            local note_octave = math.floor(note.pitch / 12) - 1
-            local note_letter = note_name[(note.pitch % 12) + 1]
-            local full_note_name = note_letter .. note_octave
-
-            local log_entry = string.format(
-                "Note %d: %s (MIDI %d)\n" ..
-                "  Start: %.2f sec (PPQ: %.0f)\n" ..
-                "  Length: %.2f sec\n" ..
-                "  Velocity: %d\n" ..
-                "  Success: YES\n\n",
-                i, full_note_name, note.pitch,
-                note.start, start_ppq,
-                note.length, note.velocity
-            )
-
-            doc_file:write(log_entry)
-            print("Added note: " .. full_note_name .. " at " .. note.start .. "s")
-        else
-            doc_file:write(string.format("Note %d: FAILED to add MIDI %d\n\n", i, note.pitch))
-            print("Failed to add note: " .. note.pitch)
+            -- Simple JSON parsing for MIDI files
+            -- Look for midi_files array in the JSON
+            local files_start = string.find(json_content, '"midi_files"%s*:%s*%[')
+            if files_start then
+                local files_section = string.sub(json_content, files_start)
+                local files_end = string.find(files_section, '%]')
+                if files_end then
+                    local files_json = string.sub(files_section, 1, files_end)
+                    -- Extract individual file paths
+                    for file_path in string.gmatch(files_json, '"([^"]+%.mid[i]?)"') do
+                        table.insert(midi_files, file_path)
+                    end
+                end
+            end
         end
     end
 
-    -- Sort MIDI events
-    reaper.MIDI_Sort(take)
+    -- Load MIDI files into the track
+    if #midi_files > 0 then
+        print("Loading " .. #midi_files .. " MIDI files...")
 
-    doc_file:write(string.format("Total notes added: %d/%d\n", notes_added, #notes))
+        for i, midi_file in ipairs(midi_files) do
+            print("Loading MIDI file: " .. midi_file)
+
+            -- Check if file exists
+            local file_test = io.open(midi_file, "r")
+            if file_test then
+                file_test:close()
+
+                -- Insert MIDI file using REAPER API
+                local success = reaper.InsertMedia(midi_file, 0)  -- 0 = insert at cursor position
+
+                if success > 0 then
+                    files_loaded = files_loaded + 1
+                    doc_file:write(string.format("MIDI File %d: %s - SUCCESS\n", i, midi_file))
+                    print("Successfully loaded: " .. midi_file)
+                else
+                    doc_file:write(string.format("MIDI File %d: %s - FAILED\n", i, midi_file))
+                    print("Failed to load: " .. midi_file)
+                end
+            else
+                doc_file:write(string.format("MIDI File %d: %s - FILE NOT FOUND\n", i, midi_file))
+                print("File not found: " .. midi_file)
+            end
+        end
+    else
+        print("No MIDI files specified in configuration")
+        doc_file:write("No MIDI files specified in configuration\n")
+    end
+
+    doc_file:write(string.format("\nTotal MIDI files loaded: %d/%d\n", files_loaded, #midi_files))
     doc_file:close()
 
-    print(string.format("Added %d MIDI notes. Documented in: midi_notes_session%s_%s.txt", notes_added, session_id, timestamp))
+    print(string.format("Loaded %d MIDI files. Documented in: midi_notes_session%s_%s.txt", files_loaded, session_id, timestamp))
 
     -- Update project
     reaper.UpdateArrange()

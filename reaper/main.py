@@ -5,61 +5,270 @@ Main entry point with improved separation of concerns and type safety.
 """
 
 import sys
+import logging
+import logging.handlers
 from pathlib import Path
 from typing import List
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from config import SystemConfig, ParameterSpec, SweepConfiguration
+from config import (SystemConfig, ParameterSpec, SweepConfiguration, ConfigManager,
+                   SessionConfig, setup_global_logging, get_logger)
 from workflow_orchestrator import WorkflowOrchestrator, MultiParameterWorkflowOrchestrator
 from parameter_sweep import COMMON_PARAMETERS
+
+# Set up global logging at module level
+setup_global_logging(log_level="DEBUG", enable_file_logging=True)
+logger = get_logger(__name__)
+
+
+def run_session_workflow(orchestrator: MultiParameterWorkflowOrchestrator, session_name: str) -> int:
+    """Run a complete session-based workflow."""
+    logger.info(f"Starting session-based workflow: {session_name}")
+    logger.debug(f"Orchestrator type: {type(orchestrator).__name__}")
+
+    print(f"Running session-based workflow: {session_name}")
+    print("=" * 60)
+
+    try:
+        logger.debug("Initializing ConfigManager")
+        # Load session configuration
+        config_manager = ConfigManager()
+        logger.debug(f"Loading session config for: {session_name}")
+        session_config = config_manager.load_session_config(session_name)
+
+        logger.info(f"Session config loaded successfully", {
+            'session_name': session_config.session_name,
+            'session_id': session_config.session_id,
+            'project_file': session_config.project_file,
+            'render_count': len(session_config.renders)
+        })
+
+        print(f"Loaded session: {session_config.session_name}")
+        print(f"Session ID: {session_config.session_id}")
+        print(f"Project file: {session_config.project_file}")
+        print(f"Number of renders: {len(session_config.renders)}")
+
+        # Verify project file exists
+        if session_config.project_file and not Path(session_config.project_file).exists():
+            logger.error(f"Project file not found: {session_config.project_file}")
+            print(f"Error: Project file not found: {session_config.project_file}")
+            return 1
+
+        logger.debug("Project file verification passed")
+
+        # Set up logging - use session-specific directory within outputs
+        base_output_dir = Path("./outputs")
+        session_dir = base_output_dir / f"session_{session_config.session_id}"
+        session_dir.mkdir(parents=True, exist_ok=True)
+        logs_dir = session_dir / "logs"
+        logs_dir.mkdir(exist_ok=True)
+
+        log_file = logs_dir / f"session_{session_config.session_id}.log"
+
+        # Set up session-specific file handler
+        session_logger = logging.getLogger(f"session_{session_config.session_id}")
+        session_handler = logging.handlers.RotatingFileHandler(
+            log_file, maxBytes=50*1024*1024, backupCount=5
+        )
+        session_handler.setFormatter(logging.Formatter(
+            '%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        ))
+        session_logger.addHandler(session_handler)
+        session_logger.setLevel(logging.DEBUG)
+
+        logger.info(f"Starting session workflow: {session_name}")
+        logger.info(f"Session config: {len(session_config.renders)} renders")
+        session_logger.info(f"Session-specific logging initialized for {session_name}")
+
+        # Process each render
+        results = []
+        logger.debug(f"Processing {len(session_config.renders)} renders")
+
+        for i, render_config in enumerate(session_config.renders, 1):
+            logger.info(f"Starting render {i}/{len(session_config.renders)}: {render_config.name}")
+            session_logger.info(f"Processing render {i}: {render_config.name}")
+
+            print(f"\n--- Processing Render {i}/{len(session_config.renders)}: {render_config.name} ---")
+
+            # Convert render config to parameter dict
+            parameters = {}
+            for param_name, param_config in render_config.parameters.items():
+                parameters[param_name] = param_config.value
+
+            logger.debug(f"Render {render_config.name} parameters: {parameters}")
+            session_logger.debug(f"Parameters for {render_config.name}: {parameters}")
+            print(f"Parameters: {parameters}")
+
+            # Set up automation config for this render
+            logger.debug(f"Creating automation config for render {render_config.name}")
+            from config import AutomationConfig
+            automation_config = AutomationConfig(
+                workflow_mode="full",
+                target_parameter="session_render",  # Generic target
+                parameter_value=0.0,  # Not used in session mode
+                session_id=session_config.session_id,
+                output_dir=session_dir
+            )
+
+            # Save automation config for Lua scripts to read
+            config_file_path = Path("automation_config.txt")
+            logger.debug(f"Saving automation config to {config_file_path}")
+            automation_config.save_to_file(config_file_path)
+            session_logger.debug(f"Automation config saved for {render_config.name}")
+
+            # Add render name to config for Lua scripts
+            logger.debug(f"Appending render-specific config for {render_config.name}")
+            with open("automation_config.txt", "a") as f:
+                f.write(f"render_name={render_config.name}\n")
+                if session_config.global_midi_config and session_config.global_midi_config.midi_files:
+                    logger.debug(f"Processing MIDI config for render {render_config.name}")
+                    # Create a simple JSON config for MIDI files
+                    import json
+                    midi_config_file = session_dir / "logs" / f"midi_config_{render_config.name}.json"
+                    midi_data = {
+                        "midi_files": session_config.global_midi_config.midi_files,
+                        "track_index": session_config.global_midi_config.track_index,
+                        "clear_existing": session_config.global_midi_config.clear_existing
+                    }
+                    logger.debug(f"Writing MIDI config to {midi_config_file}")
+                    session_logger.debug(f"MIDI files for {render_config.name}: {midi_data['midi_files']}")
+                    with open(midi_config_file, 'w') as midi_f:
+                        json.dump(midi_data, midi_f, indent=2)
+                    f.write(f"midi_config={midi_config_file}\n")
+
+            # Run the workflow for this render
+            try:
+                logger.info(f"Executing workflow for render {render_config.name}")
+                session_logger.info(f"Starting workflow execution for {render_config.name}")
+
+                result = orchestrator.run_single_parameter_session(
+                    session_id=f"{session_config.session_id}_{render_config.name}",
+                    parameters=parameters,
+                    project_file=Path(session_config.project_file) if session_config.project_file else None
+                )
+                results.append(result)
+
+                if result.success:
+                    logger.info(f"Render {render_config.name} completed successfully")
+                    session_logger.info(f"Render {render_config.name} SUCCESS - execution time: {result.execution_time_seconds:.2f}s, artifacts: {result.artifacts_created}")
+                    print(f"✅ Render {render_config.name} completed successfully")
+                else:
+                    logger.error(f"Render {render_config.name} failed: {result.error_message}")
+                    session_logger.error(f"Render {render_config.name} FAILED: {result.error_message}")
+                    print(f"❌ Render {render_config.name} failed: {result.error_message}")
+
+            except Exception as e:
+                logger.exception(f"Exception processing render {render_config.name}: {e}")
+                session_logger.exception(f"Exception in render {render_config.name}: {e}")
+                print(f"❌ Error processing render {render_config.name}: {e}")
+                results.append(None)
+
+        # Summary
+        successful_renders = sum(1 for r in results if r and r.success)
+        total_renders = len(session_config.renders)
+
+        logger.info(f"Session workflow completed: {successful_renders}/{total_renders} successful renders")
+        session_logger.info(f"Session summary: {successful_renders}/{total_renders} successful, output: {session_config.output_directory}")
+
+        print(f"\n" + "=" * 60)
+        print("SESSION SUMMARY")
+        print("=" * 60)
+        print(f"Session: {session_config.session_name} ({session_config.session_id})")
+        print(f"Successful renders: {successful_renders}/{total_renders}")
+        print(f"Output directory: {session_config.output_directory}")
+        print(f"Log file: {log_file}")
+
+        # Log detailed results
+        for i, result in enumerate(results):
+            if result:
+                logger.debug(f"Result {i+1}: success={result.success}, time={result.execution_time_seconds:.2f}s, artifacts={result.artifacts_created}")
+
+        return_code = 0 if successful_renders == total_renders else 1
+        logger.info(f"Session workflow returning exit code: {return_code}")
+        return return_code
+
+    except FileNotFoundError as e:
+        logger.error(f"File not found error in session workflow: {e}")
+        print(f"Error: {e}")
+        return 1
+    except Exception as e:
+        logger.exception(f"Unexpected error in session workflow: {e}")
+        print(f"Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
 
 
 def main():
     """Main entry point with clean architecture."""
+    logger.info("=== REAPER Automation System v2 Starting ===")
+    logger.debug(f"Command line arguments: {sys.argv}")
 
     # Initialize system configuration
     try:
+        logger.debug("Initializing system configuration")
         system_config = SystemConfig()
+        logger.debug(f"System config created: reaper_path={system_config.reaper_path}")
         system_config.validate()
+        logger.info("System configuration validated successfully")
     except Exception as e:
+        logger.error(f"System configuration error: {e}")
         print(f"System configuration error: {e}")
         print("Please check REAPER installation and startup script configuration.")
         return 1
 
     # Create orchestrator
+    logger.debug("Creating MultiParameterWorkflowOrchestrator")
     orchestrator = MultiParameterWorkflowOrchestrator(system_config)
+    logger.info("Workflow orchestrator initialized")
 
     # Handle command line arguments
     if len(sys.argv) > 1:
         command = sys.argv[1]
+        logger.info(f"Executing command: {command}")
 
         if command == "octave-sweep":
             # Classic octave sweep (backward compatibility)
             project_file = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("data/serum/serum1.RPP")
+            logger.info(f"Running octave sweep with project file: {project_file}")
             if not project_file.exists():
+                logger.error(f"Project file not found: {project_file}")
                 print(f"Project file not found: {project_file}")
                 return 1
+            logger.debug("Starting octave sweep execution")
             results = orchestrator.run_octave_sweep(project_file)
+            success_count = sum(1 for r in results if r.success)
+            logger.info(f"Octave sweep completed: {success_count}/{len(results)} successful")
             return 0 if all(r.success for r in results) else 1
 
         elif command == "discover":
             # Parameter discovery
             project_file = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("data/serum/serum1.RPP")
+            logger.info(f"Running parameter discovery with project file: {project_file}")
             if not project_file.exists():
+                logger.error(f"Project file not found for discovery: {project_file}")
                 print(f"Project file not found: {project_file}")
                 return 1
+            logger.debug("Starting parameter discovery")
             success = orchestrator.discover_parameters(project_file)
+            logger.info(f"Parameter discovery completed: {'success' if success else 'failed'}")
             return 0 if success else 1
 
         elif command == "multi-param":
             # Multi-parameter sweep example
             project_file = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("data/serum/serum1.RPP")
+            logger.info(f"Running multi-parameter sweep with project file: {project_file}")
             if not project_file.exists():
+                logger.error(f"Project file not found for multi-param: {project_file}")
                 print(f"Project file not found: {project_file}")
                 return 1
+            logger.debug("Starting filter and envelope sweep")
             results = orchestrator.run_filter_and_envelope_sweep(project_file)
+            success_count = sum(1 for r in results if r.success)
+            logger.info(f"Multi-parameter sweep completed: {success_count}/{len(results)} successful")
             return 0 if all(r.success for r in results) else 1
 
 
@@ -109,6 +318,15 @@ def main():
                 print(f"Error parsing custom sweep parameters: {e}")
                 return 1
 
+        elif command == "session":
+            # Run session-based workflow
+            if len(sys.argv) < 3:
+                print("Usage: main.py session <session_name>")
+                return 1
+
+            session_name = sys.argv[2]
+            return run_session_workflow(orchestrator, session_name)
+
         else:
             print_usage()
             return 1
@@ -136,6 +354,7 @@ def print_usage():
     print("  discover [project]               Discover VST parameters")
     print("  multi-param [project]            Run filter cutoff + attack envelope sweep")
     print("  custom-sweep <specs> [options]   Custom parameter sweep")
+    print("  session <session_name>           Run session-based workflow with JSON config")
     print()
     print("Custom sweep parameter specs:")
     print("  <param_name>:<min>:<max>:<steps>")

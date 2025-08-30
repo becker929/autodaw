@@ -1,0 +1,168 @@
+{
+  "session_name": "test_random_session",
+  "session_id": "b6657d58",
+  "project_file": "data/serum/serum1.RPP",
+  "renders": [
+    {
+      "name": "render_001",
+      "parameters": {
+        "osc_a_octave": {
+          "name": "osc_a_octave",
+          "value": 0.557707193831535
+        },
+        "filter_cutoff": {
+          "name": "filter_cutoff",
+          "value": 0.1
+        },
+        "filter_resonance": {
+          "name": "filter_resonance",
+          "value": 0.8
+        },
+        "amp_attack": {
+          "name": "amp_attack",
+          "value": 2.0
+        },
+        "amp_release": {
+          "name": "amp_release",
+          "value": 0.1
+        }
+      },
+      "midi_config": null,
+      "output_filename": "render_001_oct0.6_cut0.10.wav",
+      "render_length": 30.0,
+      "render_quality": "high"
+    },
+    {
+      "name": "render_002",
+      "parameters": {
+        "osc_a_octave": {
+          "name": "osc_a_octave",
+          "value": -1.107157047404709
+        },
+        "filter_cutoff": {
+          "name": "filter_cutoff",
+          "value": 0.1
+        },
+        "filter_resonance": {
+          "name": "filter_resonance",
+          "value": 0.8
+        },
+        "amp_attack": {
+          "name": "amp_attack",
+          "value": 8.0
+        },
+        "amp_release": {
+          "name": "amp_release",
+          "value": 12.0
+        }
+      },
+      "midi_config": null,
+      "output_filename": "render_002_oct-1.1_cut0.10.wav",
+      "render_length": 30.0,
+      "render_quality": "high"
+    },
+    {
+      "name": "render_003",
+      "parameters": {
+        "osc_a_octave": {
+          "name": "osc_a_octave",
+          "value": -1.6522446694823354
+        },
+        "filter_cutoff": {
+          "name": "filter_cutoff",
+          "value": 0.7
+        },
+        "filter_resonance": {
+          "name": "filter_resonance",
+          "value": 0.0
+        },
+        "amp_attack": {
+          "name": "amp_attack",
+          "value": 0.0
+        },
+        "amp_release": {
+          "name": "amp_release",
+          "value": 0.1
+        }
+      },
+      "midi_config": null,
+      "output_filename": "render_003_oct-1.7_cut0.70.wav",
+      "render_length": 30.0,
+      "render_quality": "high"
+    },
+    {
+      "name": "render_004",
+      "parameters": {
+        "osc_a_octave": {
+          "name": "osc_a_octave",
+          "value": -1.1254481007855865
+        },
+        "filter_cutoff": {
+          "name": "filter_cutoff",
+          "value": 0.9
+        },
+        "filter_resonance": {
+          "name": "filter_resonance",
+          "value": 0.8
+        },
+        "amp_attack": {
+          "name": "amp_attack",
+          "value": 0.0
+        },
+        "amp_release": {
+          "name": "amp_release",
+          "value": 12.0
+        }
+      },
+      "midi_config": null,
+      "output_filename": "render_004_oct-1.1_cut0.90.wav",
+      "render_length": 30.0,
+      "render_quality": "high"
+    },
+    {
+      "name": "render_005",
+      "parameters": {
+        "osc_a_octave": {
+          "name": "osc_a_octave",
+          "value": -1.204649397253406
+        },
+        "filter_cutoff": {
+          "name": "filter_cutoff",
+          "value": 0.9
+        },
+        "filter_resonance": {
+          "name": "filter_resonance",
+          "value": 0.4
+        },
+        "amp_attack": {
+          "name": "amp_attack",
+          "value": 0.0
+        },
+        "amp_release": {
+          "name": "amp_release",
+          "value": 3.0
+        }
+      },
+      "midi_config": null,
+      "output_filename": "render_005_oct-1.2_cut0.90.wav",
+      "render_length": 30.0,
+      "render_quality": "high"
+    }
+  ],
+  "global_midi_config": {
+    "midi_files": [
+      "midi/test_random_session/test_random_session_melody_C_major.mid",
+      "midi/test_random_session/test_random_session_chords_Am_minor.mid"
+    ],
+    "track_index": 0,
+    "clear_existing": true
+  },
+  "output_directory": "./outputs",
+  "created_at": "2025-08-30T11:14:40.655205",
+  "metadata": {
+    "description": "Test session with randomized Serum parameters",
+    "num_renders": 5,
+    "seed": 42,
+    "parameter_ranges": "Serum oscillator, filter, and envelope parameters"
+  }
+}

@@ -2,10 +2,14 @@
 
 import json
 import time
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
-from config import AutomationConfig
+from config import AutomationConfig, get_logger
+
+# Set up module logger
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -79,71 +83,104 @@ class LuaScriptInterface:
 
     def __init__(self, beacon_file: Path):
         self.beacon_file = beacon_file
+        logger.info(f"LuaScriptInterface initialized with beacon file: {beacon_file}")
+        logger.debug(f"Beacon file exists: {beacon_file.exists()}")
 
     def clear_beacon_file(self) -> None:
         """Remove beacon file if it exists."""
+        logger.debug(f"Clearing beacon file: {self.beacon_file}")
         try:
             if self.beacon_file.exists():
                 self.beacon_file.unlink()
+                logger.debug("Beacon file removed successfully")
+            else:
+                logger.debug("Beacon file does not exist, nothing to clear")
         except Exception as e:
+            logger.warning(f"Could not clear beacon file: {e}")
             print(f"Warning: Could not clear beacon file: {e}")
 
     def read_beacon_data(self) -> Optional[BeaconData]:
         """Read structured beacon data."""
-        return BeaconData.from_beacon_file(self.beacon_file)
+        beacon_data = BeaconData.from_beacon_file(self.beacon_file)
+        if beacon_data:
+            logger.debug(f"Read beacon data: status={beacon_data.status}, script={beacon_data.script}")
+        return beacon_data
 
     def wait_for_completion(self, timeout_seconds: int = 60) -> tuple[bool, Optional[BeaconData]]:
         """Monitor beacon file until completion or timeout."""
+        logger.info(f"Monitoring beacon file for completion, timeout: {timeout_seconds}s")
         print("Monitoring automation progress via beacon file...")
 
         start_time = time.time()
         last_status = None
         last_beacon_data = None
+        check_count = 0
 
         while time.time() - start_time < timeout_seconds:
+            check_count += 1
             beacon_data = self.read_beacon_data()
 
             if beacon_data:
                 last_beacon_data = beacon_data
+                logger.debug(f"Beacon check #{check_count}: status={beacon_data.status}, script={beacon_data.script}")
 
                 # Print status updates
                 if beacon_data.status != last_status:
+                    logger.info(f"Status change: {last_status} -> {beacon_data.status}")
                     print(f"Status: {beacon_data.status} - {beacon_data.script}")
                     if beacon_data.message:
+                        logger.debug(f"Beacon message: {beacon_data.message}")
                         print(f"  Message: {beacon_data.message}")
                     if beacon_data.progress > 0:
+                        logger.debug(f"Progress: {beacon_data.progress:.1%}")
                         print(f"  Progress: {beacon_data.progress:.1%}")
                     last_status = beacon_data.status
 
                 # Check for completion or error
                 if beacon_data.status == 'COMPLETED':
+                    logger.info("Lua automation completed successfully")
                     print("✓ Automation completed successfully!")
                     return True, beacon_data
                 elif beacon_data.status == 'ERROR':
+                    logger.error(f"Lua automation failed: {beacon_data.message}")
                     print(f"✗ Automation failed: {beacon_data.message}")
                     return False, beacon_data
+            else:
+                if check_count % 10 == 0:  # Log every 10th check when no beacon
+                    logger.debug(f"No beacon data found after {check_count} checks")
 
             # Wait before checking again
             time.sleep(1)
 
+        logger.warning(f"Beacon monitoring timed out after {timeout_seconds}s, {check_count} checks")
         print(f"⚠ Timeout after {timeout_seconds} seconds - automation may still be running")
         return False, last_beacon_data
 
     def create_config_for_script(self, config: AutomationConfig, script_data: Dict[str, Any] = None) -> None:
         """Create configuration file for Lua scripts to read."""
-        config_path = self.beacon_file.parent / "automation_config.txt"
+        config_path = Path("automation_config.txt")
+        logger.debug(f"Creating config file for Lua scripts: {config_path}")
 
         # Merge script-specific data
         if script_data:
+            logger.debug(f"Merging script data with {len(script_data)} keys")
             config_dict = config.to_dict()
             config_dict.update(script_data)
         else:
+            logger.debug("Using automation config without script data")
             config_dict = config.to_dict()
 
+        logger.debug(f"Writing config with {len(config_dict)} keys: {list(config_dict.keys())}")
+
         # Write config file
-        with open(config_path, 'w') as f:
-            for key, value in config_dict.items():
-                f.write(f"{key}={value}\n")
+        try:
+            with open(config_path, 'w') as f:
+                for key, value in config_dict.items():
+                    f.write(f"{key}={value}\n")
+            logger.info(f"Lua config file written successfully: {config_path}")
+        except Exception as e:
+            logger.error(f"Failed to write Lua config file: {e}")
+            raise
 
 
 @dataclass
