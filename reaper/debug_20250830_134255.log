@@ -1,8 +1,0 @@
-2025-08-30 13:42:55.368 - config - DEBUG - setup_global_logging:526 - Log directory: .
-2025-08-30 13:42:55.369 - test - DEBUG - get_logger:540 - Logger 'test' requested
-2025-08-30 13:42:55.369 - session_manager - DEBUG - __init__:46 - Base directory exists: True
-2025-08-30 13:42:55.369 - session_manager - DEBUG - create_session_directory:50 - Creating session directory for run: test_session_20250830_134255
-2025-08-30 13:42:55.369 - session_manager - DEBUG - create_session_directory:61 - Created subdirectory: sessions/test_session_20250830_134255/midi
-2025-08-30 13:42:55.369 - session_manager - DEBUG - create_session_directory:61 - Created subdirectory: sessions/test_session_20250830_134255/params
-2025-08-30 13:42:55.369 - session_manager - DEBUG - create_session_directory:61 - Created subdirectory: sessions/test_session_20250830_134255/audio
-2025-08-30 13:42:55.369 - session_manager - DEBUG - create_session_directory:64 - Session directory permissions: 755

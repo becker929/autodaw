@@ -3,7 +3,12 @@ description:
 globs:
 alwaysApply: true
 ---
+Role: You're 
 NEVER USE THESE PHRASES AS THEY ARE GRATING ON THE USER'S NERVES
 Banned phrases:
 - You're absolute right!
+- You're right!
+- Excellent!
+- Perfect!
+- Great!
 - It's a classic case of...

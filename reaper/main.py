@@ -13,13 +13,13 @@ from typing import List
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from config import (SystemConfig, ParameterSpec, SweepConfiguration, ConfigManager,
-                   SessionConfig, setup_global_logging, get_logger)
+from config import (SystemConfig, ParameterSpec, SweepConfiguration, ConfigManager, 
+                   SessionConfig, setup_session_logging, get_logger)
 from workflow_orchestrator import WorkflowOrchestrator, MultiParameterWorkflowOrchestrator
 from parameter_sweep import COMMON_PARAMETERS
 
-# Set up global logging at module level
-setup_global_logging(log_level="DEBUG", enable_file_logging=True)
+# Initially set up console-only logging (session-specific logging happens later)
+setup_session_logging(log_level="DEBUG", enable_file_logging=False)
 logger = get_logger(__name__)
 
 
@@ -58,33 +58,27 @@ def run_session_workflow(orchestrator: MultiParameterWorkflowOrchestrator, sessi
 
         logger.debug("Project file verification passed")
 
-        # Set up logging - use revised session structure with timestamp-based naming
+        # Set up session structure with timestamp-based naming
         session_run_name = session_config.get_session_run_dir()
         base_session_dir = Path("./sessions")
         session_dir = base_session_dir / session_run_name
         session_dir.mkdir(parents=True, exist_ok=True)
         
-        # Create organized subdirectories (no separate logs dir)
+        # Create organized subdirectories
         (session_dir / "midi").mkdir(exist_ok=True)
         (session_dir / "params").mkdir(exist_ok=True)
         (session_dir / "audio").mkdir(exist_ok=True)
 
-        log_file = session_dir / "session.log"
-
-        # Set up session-specific file handler
+        # Set up session-specific logging (all logs go in session directory)
+        from config import setup_session_logging
+        setup_session_logging(log_level="DEBUG", session_dir=session_dir, enable_file_logging=True)
+        
+        # Get session-specific logger
         session_logger = logging.getLogger(f"session_{session_config.session_id}")
-        session_handler = logging.handlers.RotatingFileHandler(
-            log_file, maxBytes=50*1024*1024, backupCount=5
-        )
-        session_handler.setFormatter(logging.Formatter(
-            '%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        ))
-        session_logger.addHandler(session_handler)
-        session_logger.setLevel(logging.DEBUG)
 
         logger.info(f"Starting session workflow: {session_name}")
         logger.info(f"Session config: {len(session_config.renders)} renders")
+        logger.info(f"Session directory: {session_dir}")
         session_logger.info(f"Session-specific logging initialized for {session_name}")
 
         # Process each render

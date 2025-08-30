@@ -188,7 +188,7 @@ class SessionConfig:
     output_directory: str = "./sessions"
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def get_session_run_dir(self) -> str:
         """Get the directory name for this specific session run."""
         timestamp = datetime.fromisoformat(self.created_at).strftime('%Y%m%d_%H%M%S')
@@ -456,32 +456,27 @@ def create_serum_parameter_sweep(session_name: str,
     return config
 
 
-def setup_global_logging(log_level: str = "DEBUG", 
-                        log_dir: Optional[Path] = None,
-                        enable_file_logging: bool = True) -> None:
+def setup_session_logging(log_level: str = "DEBUG", 
+                          session_dir: Optional[Path] = None,
+                          enable_file_logging: bool = True) -> None:
     """
-    Set up global logging configuration for the entire application.
+    Set up logging configuration for a specific session.
     
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        log_dir: Directory for log files. If None, uses current directory
+        session_dir: Session directory for log files. If None, logs only to console
         enable_file_logging: Whether to enable file logging
     """
     # Convert string level to logging constant
     numeric_level = getattr(logging, log_level.upper(), logging.DEBUG)
     
-    # Set up log directory (current directory by default)
-    if log_dir is None:
-        log_dir = Path(".")
-    log_dir.mkdir(parents=True, exist_ok=True)
-
     # Configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(numeric_level)
-
+    
     # Clear existing handlers
     root_logger.handlers.clear()
-
+    
     # Create detailed formatter
     detailed_formatter = logging.Formatter(
         '%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
@@ -493,19 +488,19 @@ def setup_global_logging(log_level: str = "DEBUG",
         '%(levelname)s [%(name)s]: %(message)s'
     )
 
-        # Add file handler if enabled
-    if enable_file_logging:
-        # Main application log
-        log_file = log_dir / f"application_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    # Add file handlers if enabled and session_dir provided
+    if enable_file_logging and session_dir:
+        # Main application log in session directory
+        log_file = session_dir / "application.log"
         file_handler = logging.handlers.RotatingFileHandler(
             log_file, maxBytes=50*1024*1024, backupCount=10
         )
         file_handler.setFormatter(detailed_formatter)
         file_handler.setLevel(logging.DEBUG)
         root_logger.addHandler(file_handler)
-
-        # Debug-only log
-        debug_file = log_dir / f"debug_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        
+        # Debug-only log in session directory
+        debug_file = session_dir / "debug.log"
         debug_handler = logging.handlers.RotatingFileHandler(
             debug_file, maxBytes=50*1024*1024, backupCount=5
         )
@@ -514,7 +509,7 @@ def setup_global_logging(log_level: str = "DEBUG",
         debug_handler.addFilter(lambda record: record.levelno == logging.DEBUG)
         root_logger.addHandler(debug_handler)
 
-    # Add console handler
+    # Add console handler (always present)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(console_formatter)
     console_handler.setLevel(logging.INFO)  # Less verbose for console
@@ -522,8 +517,9 @@ def setup_global_logging(log_level: str = "DEBUG",
 
     # Log the setup
     logger = logging.getLogger(__name__)
-    logger.info(f"Global logging configured: level={log_level}, file_logging={enable_file_logging}")
-    logger.debug(f"Log directory: {log_dir}")
+    logger.info(f"Session logging configured: level={log_level}, session_dir={session_dir}")
+    if session_dir:
+        logger.debug(f"Log files: application.log, debug.log in {session_dir}")
 
 
 def get_logger(name: str) -> logging.Logger:
