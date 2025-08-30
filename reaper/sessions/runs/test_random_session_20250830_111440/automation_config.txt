@@ -1,0 +1,12 @@
+workflow_mode=full
+target_parameter=osc_a_octave
+parameter_value=-1.107157047404709
+session_id=b6657d58_render_002
+output_dir=sessions/runs/b6657d58_render_002
+osc_a_octave=-1.107157047404709
+filter_cutoff=0.1
+filter_resonance=0.8
+amp_attack=8.0
+amp_release=12.0
+beacon_file=sessions/runs/test_random_session_20250830_111440/reaper_automation_beacon.txt
+config_file=sessions/runs/test_random_session_20250830_111440/automation_config.txt

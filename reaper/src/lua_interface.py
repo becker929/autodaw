@@ -170,7 +170,7 @@ class LuaScriptInterface:
         else:
             logger.debug("Using automation config without script data")
             config_dict = config.to_dict()
-        
+
         # Add beacon file path and config file path to config
         config_dict['beacon_file'] = str(self.beacon_file)
         config_dict['config_file'] = str(config_path)

@@ -49,7 +49,7 @@ function read_config()
         end
     end
     file:close()
-    
+
     -- If config contains a different config_file path, update our config for future use
     if config_data.config_file and config_data.config_file ~= config.config_file then
         print("Updating config file path to: " .. config_data.config_file)

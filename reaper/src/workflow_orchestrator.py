@@ -54,7 +54,8 @@ class WorkflowOrchestrator:
     def _create_session_lua_interface(self, session_dir: Path) -> None:
         """Create session-specific LuaScriptInterface with beacon file in session directory."""
         beacon_file = session_dir / "reaper_automation_beacon.txt"
-        logger.debug(f"Creating session-specific LuaScriptInterface with beacon_file={beacon_file}")
+        logger.info(f"Creating session-specific LuaScriptInterface for session_dir: {session_dir}")
+        logger.info(f"Session beacon file will be: {beacon_file}")
         self.lua_interface = LuaScriptInterface(beacon_file)
 
     def run_single_parameter_session(self,
@@ -68,10 +69,13 @@ class WorkflowOrchestrator:
 
         logger.info(f"Starting single parameter session: {session_id}")
         logger.debug(f"Parameters: {parameters}")
-        
-        # Initialize session-specific lua interface if session_dir provided
+
+        # Always initialize session-specific lua interface for each session
         if session_dir:
             self._create_session_lua_interface(session_dir)
+        else:
+            # Fallback to system config beacon file if no session_dir provided
+            self.lua_interface = LuaScriptInterface(self.system_config.beacon_file)
         logger.debug(f"Project file: {project_file}")
 
         print(f"\n{'='*60}")

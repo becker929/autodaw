@@ -1,0 +1,8 @@
+{
+  "midi_files": [
+    "midi/test_random_session/test_random_session_melody_C_major.mid",
+    "midi/test_random_session/test_random_session_chords_Am_minor.mid"
+  ],
+  "track_index": 0,
+  "clear_existing": true
+}

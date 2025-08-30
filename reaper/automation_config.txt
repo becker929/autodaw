@@ -1,10 +1,7 @@
 workflow_mode=full
-target_parameter=osc_a_octave
-parameter_value=0.557707193831535
-session_id=b6657d58_render_001
-output_dir=sessions/runs/b6657d58_render_001
-osc_a_octave=0.557707193831535
-filter_cutoff=0.1
-filter_resonance=0.8
-amp_attack=2.0
-amp_release=0.1
+target_parameter=session_render
+parameter_value=0.0
+session_id=b6657d58
+output_dir=sessions/runs/test_random_session_20250830_111440
+render_name=render_002
+midi_config=sessions/runs/test_random_session_20250830_111440/midi_config_render_002.json
