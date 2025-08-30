@@ -145,7 +145,8 @@ def run_session_workflow(orchestrator: MultiParameterWorkflowOrchestrator, sessi
                 result = orchestrator.run_single_parameter_session(
                     session_id=f"{session_config.session_id}_{render_config.name}",
                     parameters=parameters,
-                    project_file=Path(session_config.project_file) if session_config.project_file else None
+                    project_file=Path(session_config.project_file) if session_config.project_file else None,
+                    session_dir=session_dir
                 )
                 results.append(result)
 

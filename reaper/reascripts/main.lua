@@ -8,11 +8,11 @@ end
 -- Configuration
 local config = {
     script_dir = "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/",
-    config_file = "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/automation_config.txt"
+    config_file = "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/automation_config.txt"  -- fallback, will be updated from session config
 }
 
 function create_beacon_file(status, message, script_name, progress, data)
-    local beacon_path = "/Users/anthonybecker/Desktop/reaper_automation_beacon.txt"
+    local beacon_path = session_config.beacon_file or "/Users/anthonybecker/Desktop/reaper_automation_beacon.txt"
     local file = io.open(beacon_path, "w")
     if file then
         file:write("timestamp=" .. os.date("%Y-%m-%d %H:%M:%S") .. "\n")
@@ -49,6 +49,12 @@ function read_config()
         end
     end
     file:close()
+    
+    -- If config contains a different config_file path, update our config for future use
+    if config_data.config_file and config_data.config_file ~= config.config_file then
+        print("Updating config file path to: " .. config_data.config_file)
+        config.config_file = config_data.config_file
+    end
 
     return config_data
 end

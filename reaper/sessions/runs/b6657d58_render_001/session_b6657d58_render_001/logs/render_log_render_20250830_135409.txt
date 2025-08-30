@@ -1,0 +1,22 @@
+Audio Render Log - Session b6657d58_render_001
+Timestamp: 2025-08-30 13:54:09
+Project: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/data/serum/serum1.RPP
+Render Name: render
+Output: sessions/runs/b6657d58_render_001/session_b6657d58_render_001/renders/sessionb6657d58_render_001_render_20250830_135409.wav
+============================================================
+
+Render range: 0.00 - 4.00 seconds (4.00 sec duration)
+Render settings configured:
+  Format: WAV
+  Sample Rate: 44100 Hz
+  Bit Depth: 16-bit
+  Dither: TPDF
+  Source: Master mix
+
+Render started at: 13:54:09
+Render completed at: 13:54:40
+Render duration: 30.80 seconds
+Render success: NO
+ERROR: Render failed or timed out
+
+Render operation completed.

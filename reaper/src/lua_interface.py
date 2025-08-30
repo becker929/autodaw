@@ -158,7 +158,8 @@ class LuaScriptInterface:
 
     def create_config_for_script(self, config: AutomationConfig, script_data: Dict[str, Any] = None) -> None:
         """Create configuration file for Lua scripts to read."""
-        config_path = Path("automation_config.txt")
+        # Create config file in the same directory as the beacon file
+        config_path = self.beacon_file.parent / "automation_config.txt"
         logger.debug(f"Creating config file for Lua scripts: {config_path}")
 
         # Merge script-specific data
@@ -169,6 +170,12 @@ class LuaScriptInterface:
         else:
             logger.debug("Using automation config without script data")
             config_dict = config.to_dict()
+        
+        # Add beacon file path and config file path to config
+        config_dict['beacon_file'] = str(self.beacon_file)
+        config_dict['config_file'] = str(config_path)
+        logger.debug(f"Added beacon_file to config: {self.beacon_file}")
+        logger.debug(f"Added config_file to config: {config_path}")
 
         logger.debug(f"Writing config with {len(config_dict)} keys: {list(config_dict.keys())}")
 

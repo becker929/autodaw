@@ -6,7 +6,7 @@ function print(val)
 end
 
 function update_beacon(status, message, data)
-    local beacon_path = "/Users/anthonybecker/Desktop/reaper_automation_beacon.txt"
+    local beacon_path = session_config.beacon_file or "/Users/anthonybecker/Desktop/reaper_automation_beacon.txt"
     local file = io.open(beacon_path, "w")
     if file then
         file:write("timestamp=" .. os.date("%Y-%m-%d %H:%M:%S") .. "\n")
