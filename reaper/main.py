@@ -58,14 +58,18 @@ def run_session_workflow(orchestrator: MultiParameterWorkflowOrchestrator, sessi
 
         logger.debug("Project file verification passed")
 
-        # Set up logging - use session-specific directory within outputs
-        base_output_dir = Path("./outputs")
-        session_dir = base_output_dir / f"session_{session_config.session_id}"
+        # Set up logging - use revised session structure with timestamp-based naming
+        session_run_name = session_config.get_session_run_dir()
+        base_session_dir = Path("./sessions")
+        session_dir = base_session_dir / session_run_name
         session_dir.mkdir(parents=True, exist_ok=True)
-        logs_dir = session_dir / "logs"
-        logs_dir.mkdir(exist_ok=True)
+        
+        # Create organized subdirectories (no separate logs dir)
+        (session_dir / "midi").mkdir(exist_ok=True)
+        (session_dir / "params").mkdir(exist_ok=True)
+        (session_dir / "audio").mkdir(exist_ok=True)
 
-        log_file = logs_dir / f"session_{session_config.session_id}.log"
+        log_file = session_dir / "session.log"
 
         # Set up session-specific file handler
         session_logger = logging.getLogger(f"session_{session_config.session_id}")
@@ -125,15 +129,15 @@ def run_session_workflow(orchestrator: MultiParameterWorkflowOrchestrator, sessi
                 f.write(f"render_name={render_config.name}\n")
                 if session_config.global_midi_config and session_config.global_midi_config.midi_files:
                     logger.debug(f"Processing MIDI config for render {render_config.name}")
-                    # Create a simple JSON config for MIDI files
+                    # Create a simple JSON config for MIDI files in session root
                     import json
-                    midi_config_file = session_dir / "logs" / f"midi_config_{render_config.name}.json"
+                    midi_config_file = session_dir / f"midi_config_{render_config.name}.json"
                     midi_data = {
                         "midi_files": session_config.global_midi_config.midi_files,
                         "track_index": session_config.global_midi_config.track_index,
                         "clear_existing": session_config.global_midi_config.clear_existing
                     }
-                    logger.debug(f"Writing MIDI config to {midi_config_file}")
+                    logger.debug(f"Writing MIDI config to session root: {midi_config_file}")
                     session_logger.debug(f"MIDI files for {render_config.name}: {midi_data['midi_files']}")
                     with open(midi_config_file, 'w') as midi_f:
                         json.dump(midi_data, midi_f, indent=2)
@@ -178,7 +182,7 @@ def run_session_workflow(orchestrator: MultiParameterWorkflowOrchestrator, sessi
         print("=" * 60)
         print(f"Session: {session_config.session_name} ({session_config.session_id})")
         print(f"Successful renders: {successful_renders}/{total_renders}")
-        print(f"Output directory: {session_config.output_directory}")
+        print(f"Session directory: {session_dir}")
         print(f"Log file: {log_file}")
 
         # Log detailed results

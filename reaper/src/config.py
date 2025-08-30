@@ -18,7 +18,7 @@ class AutomationConfig:
     target_parameter: str = "octave"
     parameter_value: float = 0.0
     session_id: str = "1"
-    output_dir: Path = Path("./outputs")
+    output_dir: Path = Path("./sessions")
 
     @classmethod
     def from_file(cls, config_path: Path) -> 'AutomationConfig':
@@ -185,9 +185,14 @@ class SessionConfig:
     project_file: Optional[str] = None
     renders: List[RenderConfig] = field(default_factory=list)
     global_midi_config: Optional[MIDIConfig] = None
-    output_directory: str = "./outputs"
+    output_directory: str = "./sessions"
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def get_session_run_dir(self) -> str:
+        """Get the directory name for this specific session run."""
+        timestamp = datetime.fromisoformat(self.created_at).strftime('%Y%m%d_%H%M%S')
+        return f"{self.session_name}_{timestamp}"
 
     def add_render(self, render_config: RenderConfig):
         """Add a render configuration to the session."""
@@ -267,8 +272,8 @@ class ConfigManager:
     """Manages session configurations with JSON storage."""
 
     def __init__(self, base_config_dir: Path = None):
-        self.base_config_dir = base_config_dir or Path("./configs")
-        self.base_config_dir.mkdir(exist_ok=True)
+        self.base_config_dir = base_config_dir or Path("./sessions/configs")
+        self.base_config_dir.mkdir(parents=True, exist_ok=True)
 
     def save_session_config(self, session_config: SessionConfig) -> Path:
         """Save session configuration to JSON file."""
@@ -451,23 +456,23 @@ def create_serum_parameter_sweep(session_name: str,
     return config
 
 
-def setup_global_logging(log_level: str = "DEBUG",
+def setup_global_logging(log_level: str = "DEBUG", 
                         log_dir: Optional[Path] = None,
                         enable_file_logging: bool = True) -> None:
     """
     Set up global logging configuration for the entire application.
-
+    
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        log_dir: Directory for log files. If None, uses ./logs
+        log_dir: Directory for log files. If None, uses current directory
         enable_file_logging: Whether to enable file logging
     """
     # Convert string level to logging constant
     numeric_level = getattr(logging, log_level.upper(), logging.DEBUG)
-
-    # Set up log directory
+    
+    # Set up log directory (current directory by default)
     if log_dir is None:
-        log_dir = Path("./logs")
+        log_dir = Path(".")
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # Configure root logger
@@ -488,9 +493,10 @@ def setup_global_logging(log_level: str = "DEBUG",
         '%(levelname)s [%(name)s]: %(message)s'
     )
 
-    # Add file handler if enabled
+        # Add file handler if enabled
     if enable_file_logging:
-        log_file = log_dir / f"autodaw_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        # Main application log
+        log_file = log_dir / f"application_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
         file_handler = logging.handlers.RotatingFileHandler(
             log_file, maxBytes=50*1024*1024, backupCount=10
         )
@@ -498,8 +504,8 @@ def setup_global_logging(log_level: str = "DEBUG",
         file_handler.setLevel(logging.DEBUG)
         root_logger.addHandler(file_handler)
 
-        # Also create a debug-specific log file
-        debug_file = log_dir / f"autodaw_debug_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        # Debug-only log
+        debug_file = log_dir / f"debug_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
         debug_handler = logging.handlers.RotatingFileHandler(
             debug_file, maxBytes=50*1024*1024, backupCount=5
         )

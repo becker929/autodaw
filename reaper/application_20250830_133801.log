@@ -1,0 +1,14 @@
+2025-08-30 13:38:01.455 - config - INFO - setup_global_logging:520 - Global logging configured: level=DEBUG, file_logging=True
+2025-08-30 13:38:01.455 - config - DEBUG - setup_global_logging:521 - Log directory: sessions/logs
+2025-08-30 13:38:01.456 - test - DEBUG - get_logger:535 - Logger 'test' requested
+2025-08-30 13:38:01.456 - test - INFO - <module>:11 - Testing unified structure
+2025-08-30 13:38:01.456 - session_manager - INFO - __init__:45 - SessionManager initialized with unified base_dir: sessions
+2025-08-30 13:38:01.456 - session_manager - DEBUG - __init__:46 - Base directory exists: True
+2025-08-30 13:38:01.456 - session_manager - DEBUG - create_session_directory:50 - Creating unified session directory for session_id: test_unified
+2025-08-30 13:38:01.456 - session_manager - DEBUG - create_session_directory:61 - Created subdirectory: sessions/session_test_unified/logs
+2025-08-30 13:38:01.456 - session_manager - DEBUG - create_session_directory:61 - Created subdirectory: sessions/session_test_unified/midi
+2025-08-30 13:38:01.456 - session_manager - DEBUG - create_session_directory:61 - Created subdirectory: sessions/session_test_unified/params
+2025-08-30 13:38:01.456 - session_manager - DEBUG - create_session_directory:61 - Created subdirectory: sessions/session_test_unified/audio
+2025-08-30 13:38:01.456 - session_manager - DEBUG - create_session_directory:61 - Created subdirectory: sessions/session_test_unified/configs
+2025-08-30 13:38:01.456 - session_manager - INFO - create_session_directory:63 - Unified session directory created: sessions/session_test_unified
+2025-08-30 13:38:01.456 - session_manager - DEBUG - create_session_directory:64 - Session directory permissions: 755

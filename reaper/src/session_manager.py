@@ -40,44 +40,51 @@ class SessionArtifacts:
 class SessionManager:
     """Manages automation sessions and their artifacts."""
 
-    def __init__(self, base_output_dir: Path = Path("./outputs")):
+    def __init__(self, base_output_dir: Path = Path("./sessions")):
         self.base_output_dir = base_output_dir
-        logger.info(f"SessionManager initialized with base_output_dir: {base_output_dir}")
-        logger.debug(f"Base output directory exists: {base_output_dir.exists()}")
+        logger.info(f"SessionManager initialized with unified base_dir: {base_output_dir}")
+        logger.debug(f"Base directory exists: {base_output_dir.exists()}")
 
-    def create_session_directory(self, session_id: str) -> Path:
-        """Create and return session directory."""
-        logger.debug(f"Creating session directory for session_id: {session_id}")
-        session_dir = self.base_output_dir / f"session_{session_id}"
-
+    def create_session_directory(self, session_run_name: str) -> Path:
+        """Create and return session directory with timestamp-based naming."""
+        logger.debug(f"Creating session directory for run: {session_run_name}")
+        session_dir = self.base_output_dir / session_run_name
+        
         try:
+            # Create main session directory
             session_dir.mkdir(parents=True, exist_ok=True)
-            logger.info(f"Session directory created: {session_dir}")
+            
+            # Create organized subdirectories (no separate logs dir)
+            subdirs = ['midi', 'params', 'audio']
+            for subdir in subdirs:
+                (session_dir / subdir).mkdir(exist_ok=True)
+                logger.debug(f"Created subdirectory: {session_dir / subdir}")
+            
+            logger.info(f"Session run directory created: {session_dir}")
             logger.debug(f"Session directory permissions: {oct(session_dir.stat().st_mode)[-3:]}")
         except Exception as e:
             logger.error(f"Failed to create session directory {session_dir}: {e}")
             raise
-
+            
         return session_dir
 
-    def get_session_directory(self, session_id: str) -> Path:
-        """Get session directory path."""
-        session_dir = self.base_output_dir / f"session_{session_id}"
-        logger.debug(f"Getting session directory for {session_id}: {session_dir}")
+    def get_session_directory(self, session_run_name: str) -> Path:
+        """Get session directory path for a specific run."""
+        session_dir = self.base_output_dir / session_run_name
+        logger.debug(f"Getting session directory for run {session_run_name}: {session_dir}")
         return session_dir
 
-    def create_session_config(self, session_id: str, config: AutomationConfig) -> Path:
+    def create_session_config(self, session_run_name: str, config: AutomationConfig) -> Path:
         """Create session-specific config and return session directory."""
-        logger.debug(f"Creating session config for session_id: {session_id}")
+        logger.debug(f"Creating session config for run: {session_run_name}")
         logger.debug(f"Input config: workflow_mode={config.workflow_mode}, target_parameter={config.target_parameter}")
-
-        session_dir = self.create_session_directory(session_id)
+        
+        session_dir = self.create_session_directory(session_run_name)
 
         # Update config with session directory
-        config.session_id = session_id
         config.output_dir = session_dir
-
-        logger.info(f"Session config created for {session_id}, output_dir: {session_dir}")
+        
+        logger.info(f"Session config created for {session_run_name}, output_dir: {session_dir}")
         return session_dir
 
     def save_session_metadata(self, session_id: str, metadata: Dict[str, Any]) -> Path:
@@ -130,31 +137,43 @@ class SessionManager:
             logger.error(f"Session directory not found: {session_dir}")
             raise FileNotFoundError(f"Session directory not found: {session_dir}")
 
-        # Collect different types of files
-        logger.debug("Scanning for parameter files")
-        parameter_files = list(session_dir.glob("params_*.txt")) + list(session_dir.glob("octave_change_*.txt"))
+        # Collect files from organized subdirectories
+        logger.debug("Scanning revised session structure for artifacts")
+        
+        # Parameter files in params/ subdirectory
+        params_dir = session_dir / "params"
+        parameter_files = list(params_dir.glob("*.txt")) if params_dir.exists() else []
+        # Also check root for legacy files
+        parameter_files.extend(list(session_dir.glob("params_*.txt")))
+        parameter_files.extend(list(session_dir.glob("octave_change_*.txt")))
         logger.debug(f"Found {len(parameter_files)} parameter files")
-
-        logger.debug("Scanning for MIDI files")
-        midi_files = list(session_dir.glob("midi_notes_*.txt"))
+        
+        # MIDI files in midi/ subdirectory
+        midi_dir = session_dir / "midi"
+        midi_files = list(midi_dir.glob("*.txt")) + list(midi_dir.glob("*.mid")) if midi_dir.exists() else []
+        # Also check root for legacy files
+        midi_files.extend(list(session_dir.glob("midi_notes_*.txt")))
         logger.debug(f"Found {len(midi_files)} MIDI files")
-
-        logger.debug("Scanning for render files")
-        render_files = list(session_dir.glob("render_log_*.txt"))
+        
+        # Render files (now in root of session directory)
+        render_files = list(session_dir.glob("render_*.txt"))
+        render_files.extend(list(session_dir.glob("render_log_*.txt")))  # Legacy
         logger.debug(f"Found {len(render_files)} render files")
-
-        audio_files = []
-        logger.debug("Scanning for log files")
+        
+        # Audio files in audio/ subdirectory
+        audio_dir = session_dir / "audio"
+        audio_files = list(audio_dir.glob("*.wav")) + list(audio_dir.glob("*.flac")) if audio_dir.exists() else []
+        # Also check legacy subdirectories
+        for legacy_audio_dir in session_dir.glob("rendered_audio_*"):
+            if legacy_audio_dir.is_dir():
+                audio_files_in_dir = list(legacy_audio_dir.glob("*.wav"))
+                logger.debug(f"Found {len(audio_files_in_dir)} audio files in legacy dir {legacy_audio_dir.name}")
+                audio_files.extend(audio_files_in_dir)
+        logger.debug(f"Found {len(audio_files)} audio files")
+        
+        # Log files (now in root of session directory)
         log_files = list(session_dir.glob("*.log"))
         logger.debug(f"Found {len(log_files)} log files")
-
-        # Find audio files (they're in subdirectories)
-        logger.debug("Scanning for audio files in subdirectories")
-        for audio_dir in session_dir.glob("rendered_audio_*"):
-            if audio_dir.is_dir():
-                audio_files_in_dir = list(audio_dir.glob("*.wav"))
-                logger.debug(f"Found {len(audio_files_in_dir)} audio files in {audio_dir.name}")
-                audio_files.extend(audio_files_in_dir)
 
         total_artifacts = len(parameter_files) + len(midi_files) + len(render_files) + len(audio_files) + len(log_files)
         logger.info(f"Collected {total_artifacts} total artifacts for session {session_id}")
