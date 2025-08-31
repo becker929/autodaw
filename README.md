@@ -8,5 +8,3 @@ The basic flow is this:
 - __startup.lua calls main.lua, which calls the ReaScripts for the session
 - the ReaScripts control Reaper to produce audio
 
-Notes for agent:
-- You'll need to create and organize artefacts e.g. .txt files and .wav files to document activity within Reaper

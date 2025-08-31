@@ -1,7 +1,0 @@
-workflow_mode=full
-target_parameter=session_render
-parameter_value=0.0
-session_id=b6657d58
-output_dir=sessions/runs/test_random_session_20250830_111440
-render_name=render_002
-midi_config=sessions/runs/test_random_session_20250830_111440/midi_config_render_002.json
