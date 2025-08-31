@@ -1,31 +1,37 @@
+-- clear_project.lua - Module for clearing the current project
+
 -- Define reaper as a global to avoid linter warnings
 reaper = reaper
 
-local module = {}
+-- Add the current script's directory to the package path to find modules
+local script_path = debug.getinfo(1, "S").source:match("@(.*/)")
+package.path = script_path .. "?.lua;" .. package.path
 
--- Helper function for console output
-local function print(msg)
-    reaper.ShowConsoleMsg(msg .. "\n")
-end
+-- Import modules
+local utils = require("lib.utils")
+local project_manager = require("lib.project_manager")
 
--- Clear all tracks in the current project
-function module.clear_project()
-    print("Clearing project")
-    local track_count = reaper.CountTracks(0)
-    for i = track_count - 1, 0, -1 do
-        local track = reaper.GetTrack(0, i)
-        if track then
-            reaper.DeleteTrack(track)
-        end
+-- Main function when run as a standalone script
+function main()
+    utils.print("=== Clear Project Script ===")
+
+    local success = project_manager.clear_project()
+
+    if success then
+        utils.print("Project cleared successfully.")
+    else
+        utils.print("Failed to clear project.")
     end
-    return true
+
+    utils.print("=== Clear Project Complete ===")
 end
 
--- Run the function if script is executed directly
-if not ... then
-    print("=== Clearing project directly ===")
-    module.clear_project()
-    print("=== Project cleared ===")
+-- Determine if this script is being run directly
+if not package.loaded["clear_project"] then
+    main()
 end
 
-return module.clear_project
+-- Return the clear_project function for use as a module
+return function()
+    return project_manager.clear_project()
+end
