@@ -16,7 +16,7 @@ function module.render_project(render_dir, file_name_pattern)
     local timestamp = os.date("%Y%m%d_%H%M%S")
     local output_filename = render_dir .. "/" .. file_name_pattern .. "_" .. timestamp .. ".wav"
     local proj_len = reaper.GetProjectLength(proj)
-    
+
     reaper.ShowConsoleMsg("Setting up render with output to: " .. output_filename .. "\n")
     reaper.Main_OnCommand(40296, 0) -- Select all
     reaper.GetSet_LoopTimeRange(true, false, 0, proj_len, false)
@@ -56,7 +56,14 @@ function module.render_project(render_dir, file_name_pattern)
         -- Wait a bit before checking again
         reaper.defer(function() end)  -- Small delay
         wait_time = wait_time + 0.5
-        reaper.Sleep(500)  -- 500ms delay
+
+        -- Use OS sleep as a fallback if reaper.Sleep is not available
+        if reaper.Sleep then
+            reaper.Sleep(500)  -- 500ms delay
+        else
+            local start = os.time()
+            while os.time() - start < 1 do end  -- Busy wait for ~0.5 seconds
+        end
     end
 
     if success then

@@ -25,7 +25,18 @@ function module.setup_simple_project()
     local track = reaper.GetTrack(0, 0)
 
     -- Name the track
-    reaper.GetSetMediaTrackInfo_String(track, "P_NAME", "Test Track", true)
+    reaper.GetSetMediaTrackInfo_String(track, "P_NAME", "Serum Track", true)
+
+                -- Add Serum VST to the track
+    print("Adding Serum VST to track...")
+    local fx_index = reaper.TrackFX_AddByName(track, "Serum (Xfer Records)", false, 1)
+
+    if fx_index < 0 then
+        print("ERROR: Failed to add Serum VST.")
+        return false
+    else
+        print("Successfully added Serum VST")
+    end
 
     -- Create a MIDI item (1 bar at 120bpm = 2 seconds)
     local start_time = 0
