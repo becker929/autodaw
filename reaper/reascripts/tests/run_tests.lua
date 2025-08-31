@@ -1,9 +1,30 @@
 -- run_tests.lua - Main test runner script
 
--- Define reaper as a global to avoid linter warnings (in case we're in REAPER)
-if reaper then
-    reaper = reaper
-end
+-- Set up comprehensive reaper mocks for all tests
+reaper = {
+    ShowConsoleMsg = function(msg) print(msg:gsub("\n$", "")) end,
+    GetProjectPath = function() return "/test/project" end,
+    CountTracks = function() return 1 end,
+    InsertTrackAtIndex = function() end,
+    GetTrack = function(proj, idx) 
+        if idx == 0 then
+            return {track_id = idx}
+        end
+        return nil
+    end,
+    GetTrackName = function(track) return true, "Test Track" end,
+    TrackFX_AddByName = function() return 0 end,
+    TrackFX_SetParam = function() end,
+    TrackFX_GetCount = function() return 0 end,
+    InsertMedia = function() return {media_item = true} end,
+    GetSetProjectInfo = function() end,
+    GetSetProjectInfo_String = function() end,
+    GetSetMediaTrackInfo_String = function() end,
+    Main_OnCommand = function() end,
+    SelectAllMediaItems = function() end,
+    DeleteTrack = function() end,
+    GetProjectName = function() return "Test Project" end
+}
 
 -- Add the parent directory to the path
 local script_path = debug.getinfo(1, "S").source:match("@(.*/)")
@@ -18,10 +39,8 @@ local test_fx_manager = require("tests.test_fx_manager")
 local test_constants = require("tests.test_constants")
 local test_session_manager = require("tests.test_session_manager")
 
--- Override print function if we're not in REAPER
-if not reaper then
-    test_runner.print = print
-end
+-- Override print function for testing
+test_runner.print = print
 
 -- Main function
 function main()

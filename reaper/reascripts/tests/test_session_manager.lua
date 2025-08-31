@@ -2,35 +2,30 @@
 
 local test_runner = require("tests.test_runner")
 
--- Mock reaper functions for testing
-local function setup_reaper_mocks()
-    if not reaper then
-        reaper = {
-            ShowConsoleMsg = function(msg) print(msg:gsub("\n$", "")) end,
-            GetProjectPath = function() return "/test/project" end,
-            CountTracks = function() return 1 end,
-            InsertTrackAtIndex = function() end,
-            GetTrack = function(proj, idx)
-                if idx == 0 then
-                    return {track_id = idx}  -- Return a valid track object
-                end
-                return nil
-            end,
-            TrackFX_AddByName = function() return 0 end,
-            TrackFX_SetParam = function() end,
-            InsertMedia = function() return {media_item = true} end,  -- Return valid media item
-            GetSetProjectInfo = function() end,
-            GetSetProjectInfo_String = function() end,
-            GetSetMediaTrackInfo_String = function() end,
-            Main_OnCommand = function() end,
-            SelectAllMediaItems = function() end,
-            DeleteTrack = function() end
-        }
-    end
-end
+-- Set up reaper mocks before any modules are loaded
+reaper = {
+    ShowConsoleMsg = function(msg) print(msg:gsub("\n$", "")) end,
+    GetProjectPath = function() return "/test/project" end,
+    CountTracks = function() return 1 end,
+    InsertTrackAtIndex = function() end,
+    GetTrack = function(proj, idx)
+        if idx == 0 then
+            return {track_id = idx}  -- Return a valid track object
+        end
+        return nil
+    end,
+    TrackFX_AddByName = function() return 0 end,
+    TrackFX_SetParam = function() end,
+    InsertMedia = function() return {media_item = true} end,  -- Return valid media item
+    GetSetProjectInfo = function() end,
+    GetSetProjectInfo_String = function() end,
+    GetSetMediaTrackInfo_String = function() end,
+    Main_OnCommand = function() end,
+    SelectAllMediaItems = function() end,
+    DeleteTrack = function() end
+}
 
 local function run_tests()
-    setup_reaper_mocks()
 
     test_runner.describe("Session Manager Loading", function()
         local session_manager = require("lib.session_manager")
@@ -112,9 +107,15 @@ local function run_tests()
             }
         }
 
-        test_runner.assert_true(pcall(function()
+        local success, error_msg = pcall(function()
             session_manager.setup_tracks(tracks_config)
-        end), "Should set up tracks without error")
+        end)
+
+        if not success then
+            test_runner.print("Track Setup Error: " .. tostring(error_msg))
+        end
+
+        test_runner.assert_true(success, "Should set up tracks without error")
     end)
 
     test_runner.describe("MIDI File Loading", function()
@@ -129,9 +130,15 @@ local function run_tests()
             ["0"] = "test.mid"
         }
 
-        test_runner.assert_true(pcall(function()
+        local success, error_msg = pcall(function()
             session_manager.load_midi_files(midi_files_config)
-        end), "Should load MIDI files without error")
+        end)
+
+        if not success then
+            test_runner.print("MIDI File Loading Error: " .. tostring(error_msg))
+        end
+
+        test_runner.assert_true(success, "Should load MIDI files without error")
 
         -- Restore original function
         utils.file_exists = original_file_exists
@@ -143,7 +150,9 @@ local function run_tests()
 
         -- Mock file_exists to return true for test
         local original_file_exists = utils.file_exists
+        local original_ensure_dir = utils.ensure_dir
         utils.file_exists = function() return true end
+        utils.ensure_dir = function() return true, nil end
 
         local render_config = {
             render_id = "test_render",
@@ -166,12 +175,19 @@ local function run_tests()
             render_options = {}
         }
 
-        test_runner.assert_true(pcall(function()
+        local success, error_msg = pcall(function()
             session_manager.execute_render_config("test_session", render_config)
-        end), "Should execute render config without error")
+        end)
 
-        -- Restore original function
+        if not success then
+            test_runner.print("Render Config Execution Error: " .. tostring(error_msg))
+        end
+
+        test_runner.assert_true(success, "Should execute render config without error")
+
+        -- Restore original functions
         utils.file_exists = original_file_exists
+        utils.ensure_dir = original_ensure_dir
     end)
 end
 
