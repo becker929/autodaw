@@ -15,6 +15,8 @@ local test_utils = require("tests.test_utils")
 local test_json = require("tests.test_json")
 local test_error_handler = require("tests.test_error_handler")
 local test_fx_manager = require("tests.test_fx_manager")
+local test_constants = require("tests.test_constants")
+local test_session_manager = require("tests.test_session_manager")
 
 -- Override print function if we're not in REAPER
 if not reaper then
@@ -34,7 +36,9 @@ function main()
         test_utils,
         test_json,
         test_error_handler,
-        test_fx_manager
+        test_fx_manager,
+        test_constants,
+        test_session_manager
     }
 
     test_runner.run_all_tests(test_modules)

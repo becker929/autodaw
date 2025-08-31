@@ -5,6 +5,7 @@ local script_path = debug.getinfo(1, "S").source:match("@(.*/)")
 package.path = script_path .. "?.lua;" .. package.path
 
 local utils = require("lib.utils")
+local constants = require("lib.constants")
 
 local project_manager = {}
 
@@ -106,11 +107,11 @@ end
 -- Function to render the project
 function project_manager.render_project(render_dir, file_name, options)
     options = options or {}
-    local sample_rate = options.sample_rate or 44100
-    local channels = options.channels or 2
-    local render_format = options.render_format or "" -- Default format
-    local session_name = options.session_name or "session"
-    local render_id = options.render_id or "render"
+    local sample_rate = options.sample_rate or constants.DEFAULT_SAMPLE_RATE
+    local channels = options.channels or constants.DEFAULT_CHANNELS
+    local render_format = options.render_format or constants.DEFAULT_RENDER_FORMAT
+    local session_name = options.session_name or constants.DEFAULT_SESSION_NAME
+    local render_id = options.render_id or constants.DEFAULT_RENDER_ID
 
     utils.print("Starting project render...")
 
@@ -123,10 +124,11 @@ function project_manager.render_project(render_dir, file_name, options)
     end
 
     -- Generate timestamp for filename
-    local timestamp = os.date("%Y%m%d_%H%M%S")
+    local timestamp = os.date(constants.TIMESTAMP_FORMAT)
 
     -- Build filename with session, render, and timestamp
-    local filename_with_context = session_name .. "_" .. render_id .. "_" .. timestamp .. "_" .. file_name
+    local filename_with_context = string.format(constants.RENDER_FILENAME_PATTERN,
+                                               session_name, render_id, timestamp, file_name)
 
     -- Build full render path
     local render_file = render_dir .. "/" .. filename_with_context
@@ -135,7 +137,7 @@ function project_manager.render_project(render_dir, file_name, options)
     reaper.GetSetProjectInfo_String(0, "RENDER_FILE", render_file, true)
 
     -- Set render bounds to entire project
-    reaper.GetSetProjectInfo(0, "RENDER_BOUNDSFLAG", 1, true) -- 1 = entire project
+    reaper.GetSetProjectInfo(0, "RENDER_BOUNDSFLAG", constants.DEFAULT_RENDER_BOUNDS_FLAG, true)
 
     -- Set render settings
     reaper.GetSetProjectInfo(0, "RENDER_SRATE", sample_rate, true)
