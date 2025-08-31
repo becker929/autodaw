@@ -9,150 +9,101 @@ local script_path = debug.getinfo(1, "S").source:match("@(.*/)")
 package.path = script_path .. "?.lua;" .. package.path
 
 -- Import modules using require
-local clear_project = require("clear_project")
-local render_project = require("render_project")
-local setup_simple_project = require("setup_simple_project")
-local fx_updater = require("fx_updater")
+local utils = require("lib.utils")
+local json = require("lib.json")
+local fx_manager = require("lib.fx_manager")
+local project_manager = require("lib.project_manager")
+local error_handler = require("lib.error_handler")
 
--- Helper function for console output
-function print(msg)
-    reaper.ShowConsoleMsg(msg .. "\n")
+-- Error handling wrapper
+local function safe_execute(func, fatal, ...)
+    return error_handler.try(func, fatal, ...)
 end
 
 -- Main function
--- Function to parse JSON string into Lua table
-function parse_json_string(json_str)
-    -- Simple JSON parser for our specific needs
-    -- This is not a full JSON parser, but works for our simple case
-
-    -- First, let's define our parsed result
-    local result = {}
-
-    -- Look for the paramChanges array
-    local param_changes_str = json_str:match('"paramChanges"%s*:%s*%[(.-)%]')
-    if not param_changes_str then
-        print("Error: Could not find paramChanges array in JSON")
-        return nil
-    end
-
-    -- Initialize the paramChanges array
-    result.paramChanges = {}
-
-    -- Find all parameter change objects
-    for param_obj_str in param_changes_str:gmatch('{(.-)}') do
-        local param_change = {}
-
-        -- Extract track
-        local track = param_obj_str:match('"track"%s*:%s*"?([^",}]+)"?')
-        if track then param_change.track = track end
-
-        -- Extract fx
-        local fx = param_obj_str:match('"fx"%s*:%s*"?([^",}]+)"?')
-        if fx then param_change.fx = fx end
-
-        -- Extract param
-        local param = param_obj_str:match('"param"%s*:%s*"?([^",}]+)"?')
-        if param then param_change.param = param end
-
-        -- Extract value
-        local value_str = param_obj_str:match('"value"%s*:%s*"?([^",}]+)"?')
-        if value_str then
-            -- Convert to number if possible
-            local num_value = tonumber(value_str)
-            param_change.value = num_value or value_str
-        end
-
-        -- Add this parameter change to our result if it has all required fields
-        if param_change.track and param_change.fx and param_change.param and param_change.value ~= nil then
-            table.insert(result.paramChanges, param_change)
-        end
-    end
-
-    return result
-end
-
 function main()
-    print("=== ReaScript Main Started ===")
+    utils.print("=== ReaScript Main Started ===")
     local proj_path = reaper.GetProjectPath("")
     local render_dir = proj_path .. "/renders"
 
-    -- Load parameter mapping if available
-    fx_updater.load_param_mapping()
+    -- Load parameter mapping if available - this will fail fatally if there's an error
+    fx_manager.load_param_mapping()
 
-    -- first render
-    clear_project()
-    if setup_simple_project() then
-        local success = render_project(render_dir, "test_render1")
-        if success then
-            print("Render 1 completed successfully!")
-        else
-            print("Render 1 may have failed - check REAPER for details")
-        end
-    else
-        print("Project setup failed - skipping render 1")
-    end
-
-    -- second render
-    clear_project()
-    if setup_simple_project() then
-        local success = render_project(render_dir, "test_render2")
-        if success then
-            print("Render 2 completed successfully!")
-        else
-            print("Render 2 may have failed - check REAPER for details")
-        end
-    else
-        print("Project setup failed - skipping render 2")
-    end
-
-    print("=== FX Parameter Update Test ===")
-
-    -- Example JSON-like string with parameter changes
-    local json_str = [[
-    {
-        "paramChanges": [
-            {
-                "track": "0",
-                "fx": "Serum",
-                "param": "A Octave",
-                "value": 0.0
-            },
-            {
-                "track": "0",
-                "fx": "Serum",
-                "param": "A Fine",
-                "value": 0.25
-            }
-        ]
-    }
-    ]]
-
-    -- Parse the JSON-like string
-    local params_data = parse_json_string(json_str)
-
-    if params_data and params_data.paramChanges then
-        -- Process the parameter changes
-        local success_count, total_count = fx_updater.process_param_changes(params_data.paramChanges)
-        print("Updated " .. success_count .. " of " .. total_count .. " parameters")
-
-        -- Example of retrieving parameter values
-        local param_requests = {
-            { track = 0, fx = "Serum", param = "A Octave" },
-            { track = 0, fx = "Serum", param = "A Fine" }
+    -- Define parameter changes for testing
+    local params_render1 = {
+        {
+            track = "0",
+            fx = "Serum",
+            param = "A Octave",
+            value = 0.4  -- Slightly lower octave
+        },
+        {
+            track = "0",
+            fx = "Serum",
+            param = "A Fine",
+            value = 0.0  -- No fine tuning
         }
+    }
 
-        local param_values = fx_updater.get_param_values(param_requests)
-        print("Retrieved parameter values:")
-        for i, param in ipairs(param_values) do
-            print("  Track: " .. tostring(param.track) .. ", FX: " .. tostring(param.fx) ..
-                  ", Param: " .. tostring(param.param) .. ", Value: " .. tostring(param.formatted_value))
-        end
-    else
-        print("No valid parameter changes found in input")
+    local params_render2 = {
+        {
+            track = "0",
+            fx = "Serum",
+            param = "A Octave",
+            value = 0.6  -- Slightly higher octave
+        },
+        {
+            track = "0",
+            fx = "Serum",
+            param = "A Fine",
+            value = 0.25  -- Quarter fine tuning
+        }
+    }
+
+    -- First render with first parameter set
+    utils.print("=== First Render with Parameter Set 1 ===")
+    project_manager.clear_project()
+    project_manager.setup_simple_project()
+
+    -- Apply first parameter set
+    local success_count, total_count = fx_manager.process_param_changes(params_render1)
+    utils.print("Applied " .. success_count .. " of " .. total_count .. " parameters for render 1")
+
+    -- Render with first parameter set
+    local render1_options = { session_name = "main_session", render_id = "render1" }
+    project_manager.render_project(render_dir, "params", render1_options)
+    utils.print("Render 1 completed successfully!")
+
+    -- Second render with second parameter set
+    utils.print("=== Second Render with Parameter Set 2 ===")
+    project_manager.clear_project()
+    project_manager.setup_simple_project()
+
+    -- Apply second parameter set
+    local success_count, total_count = fx_manager.process_param_changes(params_render2)
+    utils.print("Applied " .. success_count .. " of " .. total_count .. " parameters for render 2")
+
+    -- Render with second parameter set
+    local render2_options = { session_name = "main_session", render_id = "render2" }
+    project_manager.render_project(render_dir, "params", render2_options)
+    utils.print("Render 2 completed successfully!")
+
+    -- Show final parameter values
+    utils.print("=== Final Parameter Values ===")
+    local param_requests = {
+        { track = 0, fx = "Serum", param = "A Octave" },
+        { track = 0, fx = "Serum", param = "A Fine" }
+    }
+
+    local param_values = fx_manager.get_param_values(param_requests)
+    utils.print("Current parameter values:")
+    for i, param in ipairs(param_values) do
+        utils.print("  Track: " .. tostring(param.track) .. ", FX: " .. tostring(param.fx) ..
+              ", Param: " .. tostring(param.param) .. ", Value: " .. tostring(param.formatted_value))
     end
 
-    print("=== ReaScript Main Ended ===")
+    utils.print("=== ReaScript Main Ended ===")
 end
 
--- Run the main function
-main()
+-- Run the main function with error handling
+safe_execute(main, true)
