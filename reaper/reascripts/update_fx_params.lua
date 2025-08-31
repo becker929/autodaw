@@ -1,6 +1,4 @@
--- main.lua - Main ReaScript for the session
--- This script performs basic project setup and rendering
-
+-- update_fx_params.lua - Example script for updating FX parameters
 -- Define reaper as a global to avoid linter warnings
 reaper = reaper
 
@@ -8,10 +6,7 @@ reaper = reaper
 local script_path = debug.getinfo(1, "S").source:match("@(.*/)")
 package.path = script_path .. "?.lua;" .. package.path
 
--- Import modules using require
-local clear_project = require("clear_project")
-local render_project = require("render_project")
-local setup_simple_project = require("setup_simple_project")
+-- Import the fx_updater module
 local fx_updater = require("fx_updater")
 
 -- Helper function for console output
@@ -19,7 +14,6 @@ function print(msg)
     reaper.ShowConsoleMsg(msg .. "\n")
 end
 
--- Main function
 -- Function to parse JSON string into Lua table
 function parse_json_string(json_str)
     -- Simple JSON parser for our specific needs
@@ -71,61 +65,44 @@ function parse_json_string(json_str)
     return result
 end
 
+-- Main function
 function main()
-    print("=== ReaScript Main Started ===")
-    local proj_path = reaper.GetProjectPath("")
-    local render_dir = proj_path .. "/renders"
+    print("=== FX Parameter Update Script ===")
 
     -- Load parameter mapping if available
     fx_updater.load_param_mapping()
-
-    -- first render
-    clear_project()
-    if setup_simple_project() then
-        local success = render_project(render_dir, "test_render1")
-        if success then
-            print("Render 1 completed successfully!")
-        else
-            print("Render 1 may have failed - check REAPER for details")
-        end
-    else
-        print("Project setup failed - skipping render 1")
-    end
-
-    -- second render
-    clear_project()
-    if setup_simple_project() then
-        local success = render_project(render_dir, "test_render2")
-        if success then
-            print("Render 2 completed successfully!")
-        else
-            print("Render 2 may have failed - check REAPER for details")
-        end
-    else
-        print("Project setup failed - skipping render 2")
-    end
-
-    print("=== FX Parameter Update Test ===")
 
     -- Example JSON-like string with parameter changes
     local json_str = [[
     {
         "paramChanges": [
             {
-                "track": "0",
+                "track": "Serum Track",
                 "fx": "Serum",
-                "param": "A Octave",
-                "value": 0.0
+                "param": "OSC1 OCT",
+                "value": 0.5
             },
             {
-                "track": "0",
+                "track": "Serum Track",
                 "fx": "Serum",
-                "param": "A Fine",
+                "param": "OSC1 FINE",
                 "value": 0.25
+            },
+            {
+                "track": "Serum Track",
+                "fx": "Serum",
+                "param": "OSC1 VOLUME",
+                "value": 0.8
             }
         ]
     }
     ]]
+
+    -- You could also get the JSON from an external source
+    -- For example, from a file:
+    -- local file = io.open("params.json", "r")
+    -- local json_str = file:read("*all")
+    -- file:close()
 
     -- Parse the JSON-like string
     local params_data = parse_json_string(json_str)
@@ -135,14 +112,18 @@ function main()
         local success_count, total_count = fx_updater.process_param_changes(params_data.paramChanges)
         print("Updated " .. success_count .. " of " .. total_count .. " parameters")
 
-        -- Example of retrieving parameter values
-        local param_requests = {
-            { track = 0, fx = "Serum", param = "A Octave" },
-            { track = 0, fx = "Serum", param = "A Fine" }
-        }
+        -- Example of retrieving parameter values after changes
+        local param_requests = {}
+        for i, change in ipairs(params_data.paramChanges) do
+            table.insert(param_requests, {
+                track = change.track,
+                fx = change.fx,
+                param = change.param
+            })
+        end
 
         local param_values = fx_updater.get_param_values(param_requests)
-        print("Retrieved parameter values:")
+        print("Current parameter values:")
         for i, param in ipairs(param_values) do
             print("  Track: " .. tostring(param.track) .. ", FX: " .. tostring(param.fx) ..
                   ", Param: " .. tostring(param.param) .. ", Value: " .. tostring(param.formatted_value))
@@ -151,7 +132,7 @@ function main()
         print("No valid parameter changes found in input")
     end
 
-    print("=== ReaScript Main Ended ===")
+    print("=== FX Parameter Update Completed ===")
 end
 
 -- Run the main function
