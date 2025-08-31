@@ -9,8 +9,16 @@ local project_manager = require("lib.project_manager")
 
 -- Load and parse session JSON file
 function session_manager.load_session(session_filename)
-    local proj_path = reaper.GetProjectPath("")
-    local session_path = proj_path .. "/" .. constants.SESSION_CONFIGS_DIR .. "/" .. session_filename
+    -- Use script directory as base path, not REAPER project path
+    local script_path = utils.get_script_path()
+    local base_path
+    if script_path then
+        base_path = script_path .. "../../"  -- Go up two levels from reascripts/lib/ to reaper/
+    else
+        -- Fallback: use current working directory if script path is not available
+        base_path = "./"
+    end
+    local session_path = base_path .. constants.SESSION_CONFIGS_DIR .. "/" .. session_filename
 
     if not utils.file_exists(session_path) then
         error(constants.ERROR_SESSION_NOT_FOUND .. ": " .. session_path)
@@ -82,8 +90,14 @@ function session_manager.execute_render_config(session_name, render_config)
     session_manager.load_midi_files(render_config.midi_files)
 
     -- Step 5: Render project
-    local proj_path = reaper.GetProjectPath("")
-    local render_dir = proj_path .. "/" .. constants.RENDERS_DIR
+    local script_path = utils.get_script_path()
+    local base_path
+    if script_path then
+        base_path = script_path .. "../../"  -- Go up two levels from reascripts/lib/ to reaper/
+    else
+        base_path = "./"
+    end
+    local render_dir = base_path .. constants.RENDERS_DIR
 
     local render_options = render_config.render_options or {}
     render_options.session_name = session_name
@@ -124,7 +138,14 @@ end
 
 -- Load MIDI files according to track mapping
 function session_manager.load_midi_files(midi_files_config)
-    local proj_path = reaper.GetProjectPath("")
+    -- Use script directory as base path for MIDI files
+    local script_path = utils.get_script_path()
+    local base_path
+    if script_path then
+        base_path = script_path .. "../../"  -- Go up two levels from reascripts/lib/ to reaper/
+    else
+        base_path = "./"
+    end
 
     for track_index, midi_filename in pairs(midi_files_config) do
         local track_idx = tonumber(track_index)
@@ -137,7 +158,7 @@ function session_manager.load_midi_files(midi_files_config)
             error(constants.ERROR_MIDI_LOAD_FAILED .. ": track not found " .. track_idx)
         end
 
-        local midi_path = proj_path .. "/" .. midi_filename
+        local midi_path = base_path .. midi_filename
         if not utils.file_exists(midi_path) then
             error(constants.ERROR_MIDI_LOAD_FAILED .. ": MIDI file not found " .. midi_path)
         end

@@ -30,7 +30,7 @@
         }
       ],
       "midi_files": {
-        "0": "test_melody.mid"
+        "0": "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/test_melody.mid"
       },
       "render_options": {
         "sample_rate": 44100,
@@ -67,7 +67,7 @@
         }
       ],
       "midi_files": {
-        "0": "test_melody.mid"
+        "0": "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/test_melody.mid"
       },
       "render_options": {
         "sample_rate": 44100,

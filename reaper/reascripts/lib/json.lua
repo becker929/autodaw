@@ -1,6 +1,167 @@
 -- json.lua - JSON handling for ReaScripts
 local json = {}
 
+-- Simple JSON decoder for basic JSON parsing
+function json.decode(json_str)
+    if not json_str or json_str == "" then
+        return nil
+    end
+
+    -- Remove whitespace
+    json_str = json_str:gsub("^%s+", ""):gsub("%s+$", "")
+
+    -- This is a simple JSON decoder that handles basic cases
+    -- For production use, consider a more robust JSON library
+    local function decode_value(str, pos)
+        pos = pos or 1
+
+        -- Skip whitespace
+        while pos <= #str and str:sub(pos, pos):match("%s") do
+            pos = pos + 1
+        end
+
+        if pos > #str then return nil, pos end
+
+        local char = str:sub(pos, pos)
+
+        if char == '"' then
+            -- String
+            local end_pos = pos + 1
+            local result = ""
+            while end_pos <= #str do
+                local c = str:sub(end_pos, end_pos)
+                if c == '"' then
+                    return result, end_pos + 1
+                elseif c == '\\' then
+                    end_pos = end_pos + 1
+                    local escaped = str:sub(end_pos, end_pos)
+                    if escaped == 'n' then result = result .. '\n'
+                    elseif escaped == 't' then result = result .. '\t'
+                    elseif escaped == 'r' then result = result .. '\r'
+                    elseif escaped == '\\' then result = result .. '\\'
+                    elseif escaped == '"' then result = result .. '"'
+                    else result = result .. escaped end
+                else
+                    result = result .. c
+                end
+                end_pos = end_pos + 1
+            end
+            error("Unterminated string")
+
+        elseif char == '{' then
+            -- Object
+            local result = {}
+            pos = pos + 1
+
+            -- Skip whitespace
+            while pos <= #str and str:sub(pos, pos):match("%s") do
+                pos = pos + 1
+            end
+
+            if pos <= #str and str:sub(pos, pos) == '}' then
+                return result, pos + 1
+            end
+
+            while pos <= #str do
+                -- Parse key
+                local key, new_pos = decode_value(str, pos)
+                pos = new_pos
+
+                -- Skip whitespace and colon
+                while pos <= #str and str:sub(pos, pos):match("%s") do
+                    pos = pos + 1
+                end
+                if pos <= #str and str:sub(pos, pos) == ':' then
+                    pos = pos + 1
+                end
+                while pos <= #str and str:sub(pos, pos):match("%s") do
+                    pos = pos + 1
+                end
+
+                -- Parse value
+                local value, new_pos = decode_value(str, pos)
+                pos = new_pos
+                result[key] = value
+
+                -- Skip whitespace
+                while pos <= #str and str:sub(pos, pos):match("%s") do
+                    pos = pos + 1
+                end
+
+                if pos <= #str and str:sub(pos, pos) == '}' then
+                    return result, pos + 1
+                elseif pos <= #str and str:sub(pos, pos) == ',' then
+                    pos = pos + 1
+                    while pos <= #str and str:sub(pos, pos):match("%s") do
+                        pos = pos + 1
+                    end
+                else
+                    error("Expected ',' or '}' in object")
+                end
+            end
+            error("Unterminated object")
+
+        elseif char == '[' then
+            -- Array
+            local result = {}
+            pos = pos + 1
+
+            -- Skip whitespace
+            while pos <= #str and str:sub(pos, pos):match("%s") do
+                pos = pos + 1
+            end
+
+            if pos <= #str and str:sub(pos, pos) == ']' then
+                return result, pos + 1
+            end
+
+            while pos <= #str do
+                local value, new_pos = decode_value(str, pos)
+                pos = new_pos
+                table.insert(result, value)
+
+                -- Skip whitespace
+                while pos <= #str and str:sub(pos, pos):match("%s") do
+                    pos = pos + 1
+                end
+
+                if pos <= #str and str:sub(pos, pos) == ']' then
+                    return result, pos + 1
+                elseif pos <= #str and str:sub(pos, pos) == ',' then
+                    pos = pos + 1
+                    while pos <= #str and str:sub(pos, pos):match("%s") do
+                        pos = pos + 1
+                    end
+                else
+                    error("Expected ',' or ']' in array")
+                end
+            end
+            error("Unterminated array")
+
+        elseif char:match("[%-0-9]") then
+            -- Number
+            local num_str = ""
+            while pos <= #str and str:sub(pos, pos):match("[%-0-9.eE+]") do
+                num_str = num_str .. str:sub(pos, pos)
+                pos = pos + 1
+            end
+            return tonumber(num_str), pos
+
+        elseif str:sub(pos, pos + 3) == "true" then
+            return true, pos + 4
+        elseif str:sub(pos, pos + 4) == "false" then
+            return false, pos + 5
+        elseif str:sub(pos, pos + 3) == "null" then
+            return nil, pos + 4
+        else
+            error("Unexpected character: " .. char)
+        end
+    end
+
+    local result, _ = decode_value(json_str)
+    return result
+end
+
 -- Function to convert Lua table to JSON string
 function json.encode(tbl, level)
     level = level or 0
