@@ -74,6 +74,7 @@ function test_runner.describe(test_name, test_func)
 
     local success, error_msg = pcall(test_func)
     if not success then
+        stats.total = stats.total + 1  -- Count the test function as a test
         stats.failed = stats.failed + 1
         local error_msg = "ERROR in test '" .. test_name .. "': " .. tostring(error_msg)
         table.insert(stats.errors, error_msg)

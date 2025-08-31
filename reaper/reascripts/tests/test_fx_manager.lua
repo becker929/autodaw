@@ -7,32 +7,35 @@ package.path = script_path .. "../?.lua;" .. package.path
 local test_runner = require("tests.test_runner")
 
 -- Mock REAPER functions for testing
-if not reaper then
-    reaper = {
-        ShowConsoleMsg = function(msg) print(msg:gsub("\n$", "")) end,
-        GetProjectPath = function() return "/tmp/test_project" end,
-        GetProjectName = function() return "Test Project" end,
-        CountTracks = function() return 0 end,
-        GetTrack = function() return nil end,
-        GetTrackName = function() return true, "Test Track" end,
-        TrackFX_GetCount = function() return 0 end,
-        TrackFX_GetFXName = function() return true, "Test FX" end,
-        TrackFX_GetNumParams = function() return 0 end,
-        TrackFX_GetParamName = function() return true, "Test Param" end,
-        TrackFX_GetParam = function() return 0.5, 0.0, 1.0 end,
-        TrackFX_GetParamEx = function() return 0.5, 0.0, 1.0, 0.5 end,
-        TrackFX_GetFormattedParamValue = function() return true, "50%" end,
-        TrackFX_GetParamIdent = function() return false, "" end,
-        TrackFX_GetParamNormalized = function() return 0.5 end,
-        file_exists = function() return false end
-    }
-end
+reaper = {
+    ShowConsoleMsg = function(msg) print(msg:gsub("\n$", "")) end,
+    GetProjectPath = function() return "/tmp/test_project" end,
+    GetProjectName = function() return "Test Project" end,
+    CountTracks = function() return 0 end,
+    GetTrack = function() return nil end,
+    GetTrackName = function() return true, "Test Track" end,
+    TrackFX_GetCount = function() return 0 end,
+    TrackFX_GetFXName = function() return true, "Test FX" end,
+    TrackFX_GetNumParams = function() return 0 end,
+    TrackFX_GetParamName = function() return true, "Test Param" end,
+    TrackFX_GetParam = function() return 0.5, 0.0, 1.0 end,
+    TrackFX_GetParamEx = function() return 0.5, 0.0, 1.0, 0.5 end,
+    TrackFX_GetFormattedParamValue = function() return true, "50%" end,
+    TrackFX_GetParamIdent = function() return false, "" end,
+    TrackFX_GetParamNormalized = function() return 0.5 end,
+    file_exists = function() return false end
+}
 
 local fx_manager = require("lib.fx_manager")
 
 local test_fx_manager = {}
 
 function test_fx_manager.run_tests()
+    -- Ensure reaper functions are properly set
+    reaper = reaper or {}
+    reaper.GetProjectName = function() return "Test Project" end
+    reaper.TrackFX_GetCount = function() return 0 end
+    reaper.GetTrackName = function() return true, "Test Track" end
         test_runner.describe("fx_manager.load_param_mapping", function()
         -- Test with non-existent file - this should throw a fatal error
         test_runner.assert_error(function()

@@ -1,5 +1,20 @@
 -- test_utils.lua - Tests for the utils module
 
+-- Set up reaper mocks before loading any modules that depend on reaper
+if not reaper then
+    reaper = {
+        ShowConsoleMsg = function(msg) print(msg:gsub("\n$", "")) end,
+        CountTracks = function() return 1 end,
+        GetTrack = function(proj, idx)
+            if idx == 0 then return {track_id = idx} end
+            return nil
+        end,
+        GetTrackName = function(track) return true, "Test Track" end,
+        TrackFX_GetCount = function() return 1 end,
+        RecursiveCreateDirectory = function() return true end
+    }
+end
+
 -- Add the parent directory to the path
 local script_path = debug.getinfo(1, "S").source:match("@(.*/)")
 package.path = script_path .. "../?.lua;" .. package.path
@@ -10,6 +25,11 @@ local utils = require("lib.utils")
 local test_utils = {}
 
 function test_utils.run_tests()
+    -- Override reaper functions again to ensure they're set
+    reaper = reaper or {}
+    reaper.GetTrackName = function(track) return true, "Test Track" end
+    reaper.TrackFX_GetCount = function() return 1 end
+    reaper.RecursiveCreateDirectory = function() return true end
     test_runner.describe("utils.get_script_path", function()
         local path = utils.get_script_path()
         test_runner.assert_not_nil(path, "get_script_path should return a path")
