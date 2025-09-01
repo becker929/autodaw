@@ -1,0 +1,111 @@
+[2025-09-01 00:07:22] [LOGGER_INIT] Logging initialized to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../session-results/target_demo_gen_001_20250901_000722.log
+[2025-09-01 00:07:22] [SESSION] SESSION_START:target_demo_gen_001
+[2025-09-01 00:07:22] [INFO] ReaScript Main Started
+[2025-09-01 00:07:22] [INFO] Log file: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../session-results/target_demo_gen_001_20250901_000722.log
+[2025-09-01 00:07:22] [INFO] Loading session: target_demo_gen_001.json
+[2025-09-01 00:07:22] [INFO] === Starting Session: target_demo_gen_001 ===
+[2025-09-01 00:07:22] [INFO] Render configs to execute: 10
+[2025-09-01 00:07:22] [INFO] === Executing Render Config: target_demo_gen_001_individual_000 ===
+[2025-09-01 00:07:22] [RENDER] RENDER_START:target_demo_gen_001_individual_000
+[2025-09-01 00:07:22] [INFO] Clearing project...
+[2025-09-01 00:07:22] [INFO] Project cleared.
+[2025-09-01 00:07:23] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:23] [INFO] Starting project render for: target_demo_gen_001_individual_000
+[2025-09-01 00:07:23] [INFO] Executing render command...
+[2025-09-01 00:07:23] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_000_20250901_000723_params
+[2025-09-01 00:07:23] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_000:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_000_20250901_000723_params
+[2025-09-01 00:07:23] [INFO] Render completed: target_demo_gen_001_individual_000
+[2025-09-01 00:07:23] [INFO] === Executing Render Config: target_demo_gen_001_individual_001 ===
+[2025-09-01 00:07:23] [RENDER] RENDER_START:target_demo_gen_001_individual_001
+[2025-09-01 00:07:23] [INFO] Clearing project...
+[2025-09-01 00:07:23] [INFO] Project cleared.
+[2025-09-01 00:07:24] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:24] [INFO] Starting project render for: target_demo_gen_001_individual_001
+[2025-09-01 00:07:24] [INFO] Executing render command...
+[2025-09-01 00:07:24] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_001_20250901_000724_params
+[2025-09-01 00:07:24] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_001:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_001_20250901_000724_params
+[2025-09-01 00:07:24] [INFO] Render completed: target_demo_gen_001_individual_001
+[2025-09-01 00:07:24] [INFO] === Executing Render Config: target_demo_gen_001_individual_002 ===
+[2025-09-01 00:07:24] [RENDER] RENDER_START:target_demo_gen_001_individual_002
+[2025-09-01 00:07:24] [INFO] Clearing project...
+[2025-09-01 00:07:24] [INFO] Project cleared.
+[2025-09-01 00:07:25] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:25] [INFO] Starting project render for: target_demo_gen_001_individual_002
+[2025-09-01 00:07:25] [INFO] Executing render command...
+[2025-09-01 00:07:25] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_002_20250901_000725_params
+[2025-09-01 00:07:25] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_002:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_002_20250901_000725_params
+[2025-09-01 00:07:25] [INFO] Render completed: target_demo_gen_001_individual_002
+[2025-09-01 00:07:25] [INFO] === Executing Render Config: target_demo_gen_001_individual_003 ===
+[2025-09-01 00:07:25] [RENDER] RENDER_START:target_demo_gen_001_individual_003
+[2025-09-01 00:07:25] [INFO] Clearing project...
+[2025-09-01 00:07:25] [INFO] Project cleared.
+[2025-09-01 00:07:26] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:26] [INFO] Starting project render for: target_demo_gen_001_individual_003
+[2025-09-01 00:07:26] [INFO] Executing render command...
+[2025-09-01 00:07:26] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_003_20250901_000726_params
+[2025-09-01 00:07:26] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_003:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_003_20250901_000726_params
+[2025-09-01 00:07:26] [INFO] Render completed: target_demo_gen_001_individual_003
+[2025-09-01 00:07:26] [INFO] === Executing Render Config: target_demo_gen_001_individual_004 ===
+[2025-09-01 00:07:26] [RENDER] RENDER_START:target_demo_gen_001_individual_004
+[2025-09-01 00:07:26] [INFO] Clearing project...
+[2025-09-01 00:07:26] [INFO] Project cleared.
+[2025-09-01 00:07:27] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:27] [INFO] Starting project render for: target_demo_gen_001_individual_004
+[2025-09-01 00:07:27] [INFO] Executing render command...
+[2025-09-01 00:07:27] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_004_20250901_000727_params
+[2025-09-01 00:07:27] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_004:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_004_20250901_000727_params
+[2025-09-01 00:07:27] [INFO] Render completed: target_demo_gen_001_individual_004
+[2025-09-01 00:07:27] [INFO] === Executing Render Config: target_demo_gen_001_individual_005 ===
+[2025-09-01 00:07:27] [RENDER] RENDER_START:target_demo_gen_001_individual_005
+[2025-09-01 00:07:27] [INFO] Clearing project...
+[2025-09-01 00:07:27] [INFO] Project cleared.
+[2025-09-01 00:07:28] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:28] [INFO] Starting project render for: target_demo_gen_001_individual_005
+[2025-09-01 00:07:28] [INFO] Executing render command...
+[2025-09-01 00:07:28] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_005_20250901_000728_params
+[2025-09-01 00:07:28] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_005:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_005_20250901_000728_params
+[2025-09-01 00:07:28] [INFO] Render completed: target_demo_gen_001_individual_005
+[2025-09-01 00:07:28] [INFO] === Executing Render Config: target_demo_gen_001_individual_006 ===
+[2025-09-01 00:07:28] [RENDER] RENDER_START:target_demo_gen_001_individual_006
+[2025-09-01 00:07:28] [INFO] Clearing project...
+[2025-09-01 00:07:28] [INFO] Project cleared.
+[2025-09-01 00:07:29] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:29] [INFO] Starting project render for: target_demo_gen_001_individual_006
+[2025-09-01 00:07:29] [INFO] Executing render command...
+[2025-09-01 00:07:29] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_006_20250901_000729_params
+[2025-09-01 00:07:29] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_006:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_006_20250901_000729_params
+[2025-09-01 00:07:29] [INFO] Render completed: target_demo_gen_001_individual_006
+[2025-09-01 00:07:29] [INFO] === Executing Render Config: target_demo_gen_001_individual_007 ===
+[2025-09-01 00:07:29] [RENDER] RENDER_START:target_demo_gen_001_individual_007
+[2025-09-01 00:07:29] [INFO] Clearing project...
+[2025-09-01 00:07:29] [INFO] Project cleared.
+[2025-09-01 00:07:30] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:30] [INFO] Starting project render for: target_demo_gen_001_individual_007
+[2025-09-01 00:07:30] [INFO] Executing render command...
+[2025-09-01 00:07:30] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_007_20250901_000730_params
+[2025-09-01 00:07:30] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_007:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_007_20250901_000730_params
+[2025-09-01 00:07:30] [INFO] Render completed: target_demo_gen_001_individual_007
+[2025-09-01 00:07:30] [INFO] === Executing Render Config: target_demo_gen_001_individual_008 ===
+[2025-09-01 00:07:30] [RENDER] RENDER_START:target_demo_gen_001_individual_008
+[2025-09-01 00:07:30] [INFO] Clearing project...
+[2025-09-01 00:07:30] [INFO] Project cleared.
+[2025-09-01 00:07:31] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:31] [INFO] Starting project render for: target_demo_gen_001_individual_008
+[2025-09-01 00:07:31] [INFO] Executing render command...
+[2025-09-01 00:07:31] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_008_20250901_000731_params
+[2025-09-01 00:07:31] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_008:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_008_20250901_000731_params
+[2025-09-01 00:07:31] [INFO] Render completed: target_demo_gen_001_individual_008
+[2025-09-01 00:07:31] [INFO] === Executing Render Config: target_demo_gen_001_individual_009 ===
+[2025-09-01 00:07:31] [RENDER] RENDER_START:target_demo_gen_001_individual_009
+[2025-09-01 00:07:31] [INFO] Clearing project...
+[2025-09-01 00:07:31] [INFO] Project cleared.
+[2025-09-01 00:07:32] [INFO] Applied 2 of 2 parameters
+[2025-09-01 00:07:32] [INFO] Starting project render for: target_demo_gen_001_individual_009
+[2025-09-01 00:07:32] [INFO] Executing render command...
+[2025-09-01 00:07:32] [INFO] Render completed to: /Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_009_20250901_000732_params
+[2025-09-01 00:07:32] [RENDER] RENDER_COMPLETE:target_demo_gen_001_individual_009:/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/reascripts/lib/../../renders/target_demo_gen_001_target_demo_gen_001_individual_009_20250901_000732_params
+[2025-09-01 00:07:32] [INFO] Render completed: target_demo_gen_001_individual_009
+[2025-09-01 00:07:32] [INFO] === Session Complete: target_demo_gen_001 ===
+[2025-09-01 00:07:32] [INFO] ReaScript Main Ended
+[2025-09-01 00:07:32] [SESSION] SESSION_COMPLETE:target_demo_gen_001
+[2025-09-01 00:07:32] [LOGGER] Closing log file
