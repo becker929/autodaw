@@ -2,3 +2,5 @@
 Archive/
 **/.DS_Store
 reaper/renders/*
+reaper/current_session.txt
+reaper/session-results/*.log
