@@ -1,0 +1,20 @@
+[project]
+name = "comparison-gui-demo"
+version = "0.1.0"
+description = "Web interface for pairwise audio file comparison and preference selection"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.1",
+    "python-multipart>=0.0.12",
+    "librosa>=0.11.0",
+    "numpy>=2.2.6",
+    "soundfile>=0.13.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+]
