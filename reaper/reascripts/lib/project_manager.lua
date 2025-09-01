@@ -6,12 +6,13 @@ package.path = script_path .. "?.lua;" .. package.path
 
 local utils = require("lib.utils")
 local constants = require("lib.constants")
+local logger = require("lib.logger")
 
 local project_manager = {}
 
 -- Function to clear the current project
 function project_manager.clear_project()
-    utils.print("Clearing project...")
+    logger.info("Clearing project...")
 
     -- Select all tracks
     reaper.SelectAllMediaItems(0, true)
@@ -25,7 +26,13 @@ function project_manager.clear_project()
     -- Delete selected tracks
     reaper.Main_OnCommand(40005, 0) -- Remove tracks
 
-    utils.print("Project cleared.")
+    -- Reset playback position to start
+    reaper.SetEditCurPos(0.0, false, false)  -- Set cursor to 0 seconds
+
+    -- Reset project timeline
+    reaper.Main_OnCommand(40042, 0) -- Transport: Go to start of project
+
+    logger.info("Project cleared.")
     return true
 end
 
@@ -113,14 +120,14 @@ function project_manager.render_project(render_dir, file_name, options)
     local session_name = options.session_name or constants.DEFAULT_SESSION_NAME
     local render_id = options.render_id or constants.DEFAULT_RENDER_ID
 
-    utils.print("Starting project render...")
+    logger.info("Starting project render for: " .. render_id)
 
     -- Ensure render directory exists
     local success, err = utils.ensure_dir(render_dir)
     if not success then
-        utils.print("CRITICAL ERROR: Could not create render directory: " .. render_dir)
+        logger.error("CRITICAL ERROR: Could not create render directory: " .. render_dir)
         error("Failed to create render directory: " .. tostring(err))
-        return false
+        return nil
     end
 
     -- Generate timestamp for filename
@@ -150,10 +157,11 @@ function project_manager.render_project(render_dir, file_name, options)
     end
 
     -- Execute render (render to file, close render dialog when finished)
+    logger.info("Executing render command...")
     reaper.Main_OnCommand(42230, 0) -- Render project to disk (bypass dialog)
 
-    utils.print("Render completed to: " .. render_file)
-    return true
+    logger.info("Render completed to: " .. render_file)
+    return render_file
 end
 
 return project_manager

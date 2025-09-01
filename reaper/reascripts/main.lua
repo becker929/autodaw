@@ -13,6 +13,7 @@ local utils = require("lib.utils")
 local constants = require("lib.constants")
 local session_manager = require("lib.session_manager")
 local error_handler = require("lib.error_handler")
+local logger = require("lib.logger")
 
 -- Error handling wrapper
 local function safe_execute(func, fatal, ...)
@@ -21,18 +22,31 @@ end
 
 -- Main function
 function main()
-    utils.print("=== ReaScript Main Started ===")
-
     -- Execute session from JSON configuration
-    -- Default session file - this could be parameterized in the future
     local session_file = "example_session.json"
 
-    utils.print("Loading session: " .. session_file)
+    local current_session_path = "current_session.txt"
+    if utils.file_exists(current_session_path) then
+        local file = io.open(current_session_path, "r")
+        if file then
+            local specified_session = file:read("*line")
+            file:close()
+            if specified_session and specified_session ~= "" then
+                session_file = specified_session
+            end
+        end
+    end
 
-    -- Execute the entire session with fail-fast error handling
+    local session_name = session_file:gsub("%.json$", "")
+    local log_file_path = logger.init(session_name)
+    logger.session_start(session_name)
+    logger.info("ReaScript Main Started")
+    logger.info("Log file: " .. (log_file_path or "none"))
+    logger.info("Loading session: " .. session_file)
     session_manager.execute_session(session_file)
-
-    utils.print("=== ReaScript Main Ended ===")
+    logger.info("ReaScript Main Ended")
+    logger.session_complete(session_name)
+    logger.close()
 end
 
 -- Run the main function with error handling

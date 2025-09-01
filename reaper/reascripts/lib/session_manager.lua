@@ -6,6 +6,7 @@ local utils = require("lib.utils")
 local constants = require("lib.constants")
 local fx_manager = require("lib.fx_manager")
 local project_manager = require("lib.project_manager")
+local logger = require("lib.logger")
 
 -- Load and parse session JSON file
 function session_manager.load_session(session_filename)
@@ -74,7 +75,8 @@ end
 
 -- Execute a single render config
 function session_manager.execute_render_config(session_name, render_config)
-    utils.print("=== Executing Render Config: " .. render_config.render_id .. " ===")
+    logger.info("=== Executing Render Config: " .. render_config.render_id .. " ===")
+    logger.render_start(render_config.render_id)
 
     -- Step 1: Clear project
     project_manager.clear_project()
@@ -84,7 +86,7 @@ function session_manager.execute_render_config(session_name, render_config)
 
     -- Step 3: Apply FX parameters (before MIDI loading)
     local success_count, total_count = fx_manager.process_param_changes(render_config.parameters)
-    utils.print("Applied " .. success_count .. " of " .. total_count .. " parameters")
+    logger.info("Applied " .. success_count .. " of " .. total_count .. " parameters")
 
     -- Step 4: Load MIDI files
     session_manager.load_midi_files(render_config.midi_files)
@@ -103,8 +105,9 @@ function session_manager.execute_render_config(session_name, render_config)
     render_options.session_name = session_name
     render_options.render_id = render_config.render_id
 
-    project_manager.render_project(render_dir, "params", render_options)
-    utils.print("Render completed: " .. render_config.render_id)
+    local render_path = project_manager.render_project(render_dir, "params", render_options)
+    logger.render_complete(render_config.render_id, render_path or "unknown")
+    logger.info("Render completed: " .. render_config.render_id)
 end
 
 -- Set up tracks from render config
@@ -176,8 +179,8 @@ end
 function session_manager.execute_session(session_filename)
     local session_data = session_manager.load_session(session_filename)
 
-    utils.print("=== Starting Session: " .. session_data.session_name .. " ===")
-    utils.print("Render configs to execute: " .. #session_data.render_configs)
+    logger.info("=== Starting Session: " .. session_data.session_name .. " ===")
+    logger.info("Render configs to execute: " .. #session_data.render_configs)
 
     -- Load parameter mapping
     fx_manager.load_param_mapping()
@@ -189,11 +192,12 @@ function session_manager.execute_session(session_filename)
         end)
 
         if not success then
+            logger.error("Render config " .. render_config.render_id .. " failed: " .. tostring(error_msg))
             error("Render config " .. render_config.render_id .. " failed: " .. tostring(error_msg))
         end
     end
 
-    utils.print("=== Session Complete: " .. session_data.session_name .. " ===")
+    logger.info("=== Session Complete: " .. session_data.session_name .. " ===")
 end
 
 return session_manager
