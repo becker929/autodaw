@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  gui-app:
+    build: .
+    container_name: docker-gui-x11
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    network_mode: host
+    stdin_open: true
+    tty: true
+    command: bash
+
+  # Alternative service for running specific applications
+  firefox:
+    build: .
+    container_name: docker-gui-firefox
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    network_mode: host
+    command: firefox
+    profiles:
+      - firefox
+
+  test-suite:
+    build: .
+    container_name: docker-gui-tests
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    network_mode: host
+    command: /home/appuser/test_apps/run_tests.sh
+    profiles:
+      - test

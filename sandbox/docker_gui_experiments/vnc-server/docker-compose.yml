@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  vnc-gui:
+    build: .
+    container_name: docker-gui-vnc
+    ports:
+      - "5900:5900"  # VNC port
+    stdin_open: true
+    tty: true
+
+  # Service for running test applications
+  vnc-tests:
+    build: .
+    container_name: docker-gui-vnc-tests
+    ports:
+      - "5901:5900"  # Different port to avoid conflicts
+    command: /home/vncuser/test_apps/run_tests.sh
+    profiles:
+      - test
+
+  # Service with password-protected VNC (more secure)
+  vnc-secure:
+    build: .
+    container_name: docker-gui-vnc-secure
+    ports:
+      - "5902:5900"
+    environment:
+      - VNC_PASSWORD=dockergui
+    command: >
+      bash -c "
+        echo 'Starting secure VNC server...'
+        Xvfb :99 -screen 0 1024x768x24 &
+        export DISPLAY=:99
+        fluxbox &
+        # Set VNC password
+        mkdir -p ~/.vnc
+        x11vnc -storepasswd dockergui ~/.vnc/passwd
+        # Start VNC with password
+        x11vnc -display :99 -forever -rfbauth ~/.vnc/passwd -listen localhost -xkb &
+        echo 'Secure VNC server started on port 5900 (mapped to host 5902)'
+        echo 'Password: dockergui'
+        tail -f /dev/null
+      "
+    profiles:
+      - secure

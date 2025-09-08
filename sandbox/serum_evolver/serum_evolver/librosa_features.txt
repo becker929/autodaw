@@ -1,0 +1,111 @@
+These are the features that librosa can extract.
+What we need to do is extract each feature from the target and compare it to the feature extracted from the audio.
+Then we need to calculate the distance between the two features.
+Then we need to return the distance.
+These distances, which need to be scalar, will then be used to calculate the fitness of the audio in a weighted linear combination.
+
+
+Feature extraction
+Spectral features
+chroma_stft(*[, y, sr, S, norm, n_fft, ...])
+
+Compute a chromagram from a waveform or power spectrogram.
+
+chroma_cqt(*[, y, sr, C, hop_length, fmin, ...])
+
+Constant-Q chromagram
+
+chroma_cens(*[, y, sr, C, hop_length, fmin, ...])
+
+Compute the chroma variant "Chroma Energy Normalized" (CENS)
+
+chroma_vqt(*[, y, sr, V, hop_length, fmin, ...])
+
+Variable-Q chromagram
+
+melspectrogram(*[, y, sr, S, n_fft, ...])
+
+Compute a mel-scaled spectrogram.
+
+mfcc(*[, y, sr, S, n_mfcc, dct_type, norm, ...])
+
+Mel-frequency cepstral coefficients (MFCCs)
+
+rms(*[, y, S, frame_length, hop_length, ...])
+
+Compute root-mean-square (RMS) value for each frame, either from the audio samples y or from a spectrogram S.
+
+spectral_centroid(*[, y, sr, S, n_fft, ...])
+
+Compute the spectral centroid.
+
+spectral_bandwidth(*[, y, sr, S, n_fft, ...])
+
+Compute p'th-order spectral bandwidth.
+
+spectral_contrast(*[, y, sr, S, n_fft, ...])
+
+Compute spectral contrast
+
+spectral_flatness(*[, y, S, n_fft, ...])
+
+Compute spectral flatness
+
+spectral_rolloff(*[, y, sr, S, n_fft, ...])
+
+Compute roll-off frequency.
+
+poly_features(*[, y, sr, S, n_fft, ...])
+
+Get coefficients of fitting an nth-order polynomial to the columns of a spectrogram.
+
+tonnetz(*[, y, sr, chroma])
+
+Compute the tonal centroid features (tonnetz)
+
+zero_crossing_rate(y, *[, frame_length, ...])
+
+Compute the zero-crossing rate of an audio time series.
+
+Rhythm features
+tempo(*[, y, sr, onset_envelope, tg, ...])
+
+Estimate the tempo (beats per minute)
+
+tempogram(*[, y, sr, onset_envelope, ...])
+
+Compute the tempogram: local autocorrelation of the onset strength envelope.
+
+fourier_tempogram(*[, y, sr, ...])
+
+Compute the Fourier tempogram: the short-time Fourier transform of the onset strength envelope.
+
+tempogram_ratio(*[, y, sr, onset_envelope, ...])
+
+Tempogram ratio features, also known as spectral rhythm patterns.
+
+Feature manipulation
+delta(data, *[, width, order, axis, mode])
+
+Compute delta features: local estimate of the derivative of the input data along the selected axis.
+
+stack_memory(data, *[, n_steps, delay])
+
+Short-term history embedding: vertically concatenate a data vector or matrix with delayed copies of itself.
+
+Feature inversion
+inverse.mel_to_stft(M, *[, sr, n_fft, power])
+
+Approximate STFT magnitude from a Mel power spectrogram.
+
+inverse.mel_to_audio(M, *[, sr, n_fft, ...])
+
+Invert a mel power spectrogram to audio using Griffin-Lim.
+
+inverse.mfcc_to_mel(mfcc, *[, n_mels, ...])
+
+Invert Mel-frequency cepstral coefficients to approximate a Mel power spectrogram.
+
+inverse.mfcc_to_audio(mfcc, *[, n_mels, ...])
+
+Convert Mel-frequency cepstral coefficients to a time-domain audio signal

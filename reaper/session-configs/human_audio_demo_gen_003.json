@@ -1,0 +1,153 @@
+{
+  "session_name": "human_audio_demo_gen_003",
+  "render_configs": [
+    {
+      "render_id": "human_audio_demo_gen_003_individual_000",
+      "tracks": [
+        {
+          "index": 0,
+          "name": "Serum Track",
+          "fx_chain": [
+            {
+              "name": "Serum",
+              "plugin_name": "Serum"
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Octave",
+          "value": 0.22019854299224817
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Fine",
+          "value": 0.6922590823678462
+        }
+      ],
+      "midi_files": {
+        "0": "test_melody.mid"
+      },
+      "render_options": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "render_format": ""
+      }
+    },
+    {
+      "render_id": "human_audio_demo_gen_003_individual_001",
+      "tracks": [
+        {
+          "index": 0,
+          "name": "Serum Track",
+          "fx_chain": [
+            {
+              "name": "Serum",
+              "plugin_name": "Serum"
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Octave",
+          "value": 0.6538818206627037
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Fine",
+          "value": 0.6652522630051229
+        }
+      ],
+      "midi_files": {
+        "0": "test_melody.mid"
+      },
+      "render_options": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "render_format": ""
+      }
+    },
+    {
+      "render_id": "human_audio_demo_gen_003_individual_002",
+      "tracks": [
+        {
+          "index": 0,
+          "name": "Serum Track",
+          "fx_chain": [
+            {
+              "name": "Serum",
+              "plugin_name": "Serum"
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Octave",
+          "value": 0.20380643575454155
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Fine",
+          "value": 0.40025237993636553
+        }
+      ],
+      "midi_files": {
+        "0": "test_melody.mid"
+      },
+      "render_options": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "render_format": ""
+      }
+    },
+    {
+      "render_id": "human_audio_demo_gen_003_individual_003",
+      "tracks": [
+        {
+          "index": 0,
+          "name": "Serum Track",
+          "fx_chain": [
+            {
+              "name": "Serum",
+              "plugin_name": "Serum"
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Octave",
+          "value": 0.7102193525183299
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Fine",
+          "value": 0.34702434066742405
+        }
+      ],
+      "midi_files": {
+        "0": "test_melody.mid"
+      },
+      "render_options": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "render_format": ""
+      }
+    }
+  ]
+}
