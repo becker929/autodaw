@@ -1,38 +1,46 @@
-"""Integration of JSI adaptive quicksort with genetic algorithm populations."""
+"""Refactored population ranking with dependency injection and composition."""
 
-import time
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
-import numpy as np
-from rich.console import Console
 
-from ..ranking.comparison_oracle import ComparisonOracle
-from ..ranking.ranking_tracker import SimpleRankingTracker
-from ..ranking.display_utils import create_ranking_table
+from .comparison_oracle import ComparisonOracle
+from .ranking_tracker import SimpleRankingTracker
+from .audio_path_matcher import AudioPathMatcher
+from .ranking_display import RankingDisplayer, LiveRankingDisplayer
+from .jsi_sorter import JSIAdaptiveQuicksort, FallbackSorter
+from .fitness_calculator import FitnessCalculator, RankingInfoBuilder
 from ..genetics.genetics import Solution
 
 
 class GAPopulationRanker:
-    """JSI-based ranking system for GA populations using audio comparisons."""
+    """JSI-based ranking system for GA populations using composition and dependency injection."""
 
     def __init__(
         self,
         oracle: ComparisonOracle,
-        console: Optional[Console] = None,
-        show_live_ranking: bool = True
+        path_matcher: AudioPathMatcher = None,
+        displayer: RankingDisplayer = None,
+        sorter: JSIAdaptiveQuicksort = None,
+        fitness_calculator: FitnessCalculator = None
     ):
-        """Initialize GA population ranker.
+        """Initialize GA population ranker with injected dependencies.
 
         Args:
             oracle: Comparison oracle for pairwise comparisons
-            console: Optional Rich console for live display (not stored to avoid serialization issues)
-            show_live_ranking: Whether to show live ranking updates
+            path_matcher: Component for matching solution IDs to audio paths
+            displayer: Component for displaying live ranking updates
+            sorter: JSI sorter for ranking solutions
+            fitness_calculator: Component for calculating fitness from rankings
         """
         self.oracle = oracle
-        self.show_live_ranking = show_live_ranking
+        self.path_matcher = path_matcher or AudioPathMatcher()
+        self.displayer = displayer or LiveRankingDisplayer()
+        self.sorter = sorter or JSIAdaptiveQuicksort(oracle, self.displayer)
+        self.fitness_calculator = fitness_calculator or FitnessCalculator()
+        self.fallback_sorter = FallbackSorter()
+
         self.comparison_count = 0
         self.generation_count = 0
-        # Don't store console to avoid serialization issues with pymoo
 
     def rank_population_with_audio(
         self,
@@ -59,281 +67,163 @@ class GAPopulationRanker:
         # Initialize ranking tracker
         tracker = SimpleRankingTracker(solution_ids)
 
-        # Filter solutions that have corresponding audio files
-        valid_solutions = []
-        valid_ids = []
-        valid_paths = {}
+        # Filter valid solutions using path matcher
+        valid_paths = self.path_matcher.filter_valid_solutions(solution_ids, audio_paths)
 
-        for i, (solution, sol_id) in enumerate(zip(solutions, solution_ids)):
-            # Look for matching audio path
-            matching_path = self._find_matching_audio_path(sol_id, audio_paths)
-            if matching_path and matching_path.exists():
-                valid_solutions.append(solution)
-                valid_ids.append(sol_id)
-                valid_paths[sol_id] = matching_path
-
-        if len(valid_solutions) < 2:
-            # Not enough valid solutions for ranking
+        if len(valid_paths) < 2:
+            # Not enough valid solutions for JSI ranking
             return self._fallback_ranking(solutions)
 
+        # Print progress information
         print(f"\n=== JSI Ranking Generation {self.generation_count} ===")
-        print(f"Valid solutions with audio: {len(valid_solutions)}/{len(solutions)}")
+        print(f"Valid solutions with audio: {len(valid_paths)}/{len(solutions)}")
 
-        # Perform adaptive quicksort with audio comparisons
-        ranked_ids = self._adaptive_quicksort_audio(
-            valid_ids,
-            valid_paths,
-            tracker
+        # Perform JSI sorting
+        valid_ids = list(valid_paths.keys())
+        ranked_ids = self.sorter.sort_with_audio(valid_ids, valid_paths, tracker, self.generation_count)
+
+        # Update comparison count from sorter
+        self.comparison_count = self.sorter.comparison_count
+
+        # Convert ranking to solutions and fitness
+        ranked_solutions, fitness_values = self._build_results(
+            solutions, solution_ids, ranked_ids, valid_ids
         )
 
-        # Convert back to solutions and calculate fitness
+        # Build ranking information
+        ranking_info = RankingInfoBuilder.build_ranking_info(
+            tracker, self.comparison_count, len(valid_ids), len(solutions)
+        )
+
+        print(f"Ranking complete: {self.comparison_count} comparisons, confidence: {ranking_info.get('confidence', 0):.3f}")
+
+        return ranked_solutions, fitness_values, ranking_info
+
+    def _build_results(
+        self,
+        solutions: List[Solution],
+        solution_ids: List[str],
+        ranked_ids: List[str],
+        valid_ids: List[str]
+    ) -> Tuple[List[Solution], List[float]]:
+        """Build final results from ranking."""
+        # Convert ranked IDs back to solutions
         ranked_solutions = []
-        fitness_values = []
 
-        for rank, sol_id in enumerate(ranked_ids):
-            # Find corresponding solution
-            idx = valid_ids.index(sol_id)
-            solution = valid_solutions[idx]
+        # Add ranked valid solutions
+        for sol_id in ranked_ids:
+            idx = solution_ids.index(sol_id)
+            ranked_solutions.append(solutions[idx])
 
-            # Convert rank to fitness (lower rank = better fitness)
-            # Use exponential decay to create meaningful fitness differences
-            fitness = np.exp(-rank * 0.5)  # Higher rank gets lower fitness
+        # Calculate fitness for ranked solutions
+        fitness_values = self.fitness_calculator.ranking_to_fitness(ranked_ids)
 
-            ranked_solutions.append(solution)
-            fitness_values.append(fitness)
-
-        # Add back invalid solutions with penalty fitness
-        penalty_fitness = 0.01  # Very low fitness for missing audio
+        # Add invalid solutions with penalty fitness
+        penalty_count = 0
         for i, solution in enumerate(solutions):
             sol_id = solution_ids[i]
             if sol_id not in valid_ids:
                 ranked_solutions.append(solution)
-                fitness_values.append(penalty_fitness)
+                penalty_count += 1
 
-        # Get final ranking information
-        if len(valid_solutions) >= 3:
-            bt_ranking, confidence, strengths = tracker.get_bt_ranking_with_confidence()
-        else:
-            bt_ranking = tracker.get_simple_ranking()
-            confidence = 0.0
-            strengths = {}
+        # Add penalty fitness values
+        if penalty_count > 0:
+            fitness_values = self.fitness_calculator.add_penalty_fitness(
+                fitness_values, penalty_count
+            )
 
-        ranking_info = {
-            'bt_ranking': bt_ranking,
-            'confidence': confidence,
-            'strengths': strengths,
-            'comparisons_made': self.comparison_count,
-            'valid_solutions': len(valid_solutions),
-            'total_solutions': len(solutions)
-        }
-
-        print(f"Ranking complete: {self.comparison_count} comparisons, confidence: {confidence:.3f}")
-
-        return ranked_solutions, fitness_values, ranking_info
-
-    def _adaptive_quicksort_audio(
-        self,
-        solution_ids: List[str],
-        audio_paths: Dict[str, Path],
-        tracker: SimpleRankingTracker
-    ) -> List[str]:
-        """Perform adaptive quicksort using audio-based comparisons.
-
-        Args:
-            solution_ids: List of solution IDs to sort
-            audio_paths: Dictionary mapping IDs to audio file paths
-            tracker: Ranking tracker for Bradley-Terry model
-
-        Returns:
-            List of solution IDs in ranked order (best to worst)
-        """
-        if len(solution_ids) <= 1:
-            return solution_ids.copy()
-
-        # Choose pivot (first item)
-        pivot = solution_ids[0]
-        rest = solution_ids[1:]
-
-        # Partition around pivot
-        better = []  # Items better than pivot
-        worse = []   # Items worse than pivot
-
-        for sol_id in rest:
-            # Make audio comparison
-            pivot_path = audio_paths[pivot]
-            item_path = audio_paths[sol_id]
-
-            # oracle.compare returns True if first item is better
-            if self.oracle.compare(item_path, pivot_path):
-                # sol_id is better than pivot
-                better.append(sol_id)
-                winner = sol_id
-            else:
-                # pivot is better than or equal to sol_id
-                worse.append(sol_id)
-                winner = pivot
-
-            # Record comparison for Bradley-Terry model
-            tracker.add_comparison(sol_id, pivot, winner)
-            self.comparison_count += 1
-
-            # Show live ranking if enabled
-            if self.show_live_ranking and self.comparison_count % 5 == 0:
-                self._show_live_ranking(tracker)
-
-        # Recursively sort partitions
-        sorted_better = self._adaptive_quicksort_audio(better, audio_paths, tracker)
-        sorted_worse = self._adaptive_quicksort_audio(worse, audio_paths, tracker)
-
-        # Return in order: better items, pivot, worse items
-        return sorted_better + [pivot] + sorted_worse
-
-    def _find_matching_audio_path(
-        self,
-        solution_id: str,
-        audio_paths: Dict[str, Path]
-    ) -> Optional[Path]:
-        """Find audio path matching the solution ID.
-
-        Args:
-            solution_id: ID of the solution
-            audio_paths: Dictionary of available audio paths
-
-        Returns:
-            Matching Path or None if not found
-        """
-        # Direct match
-        if solution_id in audio_paths:
-            return audio_paths[solution_id]
-
-        # Fuzzy match - look for solution ID in path keys
-        for path_key, path in audio_paths.items():
-            if solution_id in path_key or path_key in solution_id:
-                return path
-
-        # Try extracting individual number from solution_id
-        try:
-            sol_num = solution_id.split('_')[-1]  # Get number part
-            for path_key, path in audio_paths.items():
-                if sol_num in path_key:
-                    return path
-        except (IndexError, ValueError):
-            pass
-
-        return None
-
-    def _show_live_ranking(self, tracker: SimpleRankingTracker) -> None:
-        """Display live ranking updates.
-
-        Args:
-            tracker: Current ranking tracker
-        """
-        if not self.show_live_ranking:
-            return
-
-        # Create console locally to avoid serialization issues
-        from rich.console import Console
-        console = Console()
-
-        current_ranking = tracker.get_simple_ranking()
-        table = create_ranking_table(
-            current_ranking,
-            title=f"Live JSI Ranking (Gen {self.generation_count}, {self.comparison_count} comparisons)"
-        )
-
-        console.clear()
-        console.print(table)
-        time.sleep(0.1)  # Brief pause for visibility
+        return ranked_solutions, fitness_values
 
     def _fallback_ranking(
         self,
         solutions: List[Solution]
     ) -> Tuple[List[Solution], List[float], Dict[str, Any]]:
-        """Fallback ranking when insufficient valid solutions.
+        """Fallback ranking when JSI is not applicable."""
+        print("Not enough valid audio files for JSI ranking. Using fallback method.")
 
-        Args:
-            solutions: Original solutions list
-
-        Returns:
-            Tuple with original order and uniform fitness
-        """
-        print("Warning: Insufficient valid audio files for JSI ranking, using fallback")
-
-        # Assign uniform fitness with slight variation
-        fitness_values = [1.0 - i * 0.01 for i in range(len(solutions))]
+        # Sort by parameter distance
+        ranked_solutions = self.fallback_sorter.sort_by_parameter_distance(solutions)
+        fitness_values = self.fallback_sorter.create_fallback_fitness(solutions)
 
         ranking_info = {
-            'bt_ranking': [f"sol_{i:03d}" for i in range(len(solutions))],
+            'bt_ranking': [],
             'confidence': 0.0,
             'strengths': {},
             'comparisons_made': 0,
             'valid_solutions': 0,
-            'total_solutions': len(solutions)
+            'total_solutions': len(solutions),
+            'fallback_used': True
         }
 
-        return solutions, fitness_values, ranking_info
+        return ranked_solutions, fitness_values, ranking_info
 
 
 class JSIFitnessEvaluator:
-    """Fitness evaluator that uses JSI ranking instead of direct distance calculation."""
+    """Fitness evaluator that uses JSI ranking with dependency injection."""
 
     def __init__(
         self,
-        oracle: ComparisonOracle,
-        console: Optional[Console] = None,
+        ranker: GAPopulationRanker,
         fitness_normalization: str = "exponential"
     ):
         """Initialize JSI fitness evaluator.
 
         Args:
-            oracle: Comparison oracle for audio comparisons
-            console: Optional console for display
-            fitness_normalization: Method for converting ranks to fitness ("exponential", "linear", "inverse")
+            ranker: Pre-configured GA population ranker
+            fitness_normalization: Method for converting ranks to fitness
         """
-        self.ranker = GAPopulationRanker(oracle, console)
+        self.ranker = ranker
         self.fitness_normalization = fitness_normalization
 
     def evaluate_population_fitness(
         self,
         solutions: List[Solution],
-        audio_paths: Dict[str, Path],
-        generation: int = None
+        audio_paths: Dict[str, Path]
     ) -> List[float]:
         """Evaluate population fitness using JSI ranking.
 
         Args:
             solutions: List of solutions to evaluate
             audio_paths: Dictionary mapping solution IDs to audio paths
-            generation: Current generation number
 
         Returns:
-            List of fitness values (higher is better for maximization)
+            List of fitness values for each solution
         """
-        _, fitness_values, ranking_info = self.ranker.rank_population_with_audio(
-            solutions, audio_paths, generation
+        _, fitness_values, _ = self.ranker.rank_population_with_audio(
+            solutions, audio_paths
         )
-
-        # Normalize fitness values based on selected method
-        if self.fitness_normalization == "exponential":
-            # Already done in ranker
-            pass
-        elif self.fitness_normalization == "linear":
-            # Linear decrease from 1.0 to 0.1
-            n = len(fitness_values)
-            fitness_values = [1.0 - 0.9 * i / max(1, n - 1) for i in range(n)]
-        elif self.fitness_normalization == "inverse":
-            # Inverse of rank + 1
-            fitness_values = [1.0 / (i + 1) for i in range(len(fitness_values))]
-
         return fitness_values
 
     def get_ranking_info(self) -> Dict[str, Any]:
-        """Get information about the last ranking operation.
-
-        Returns:
-            Dictionary with ranking statistics
-        """
+        """Get information about the ranking process."""
         return {
             'comparison_count': self.ranker.comparison_count,
-            'generation_count': self.ranker.generation_count
+            'generation_count': self.ranker.generation_count,
+            'fitness_normalization': self.fitness_normalization
         }
+
+
+# Factory functions for easy creation with standard dependencies
+def create_standard_population_ranker(
+    oracle: ComparisonOracle,
+    show_live_ranking: bool = True
+) -> GAPopulationRanker:
+    """Create a population ranker with standard dependencies."""
+    displayer = LiveRankingDisplayer(enabled=show_live_ranking)
+    sorter = JSIAdaptiveQuicksort(oracle, displayer)
+
+    return GAPopulationRanker(
+        oracle=oracle,
+        displayer=displayer,
+        sorter=sorter
+    )
+
+
+def create_standard_fitness_evaluator(
+    oracle: ComparisonOracle,
+    fitness_normalization: str = "exponential",
+    show_live_ranking: bool = True
+) -> JSIFitnessEvaluator:
+    """Create a fitness evaluator with standard dependencies."""
+    ranker = create_standard_population_ranker(oracle, show_live_ranking)
+    return JSIFitnessEvaluator(ranker, fitness_normalization)

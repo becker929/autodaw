@@ -1,0 +1,76 @@
+{
+  "generation": 1,
+  "timestamp": 1757392404.4021351,
+  "population_size": 8,
+  "fitness_stats": {
+    "best": Infinity,
+    "worst": Infinity,
+    "mean": Infinity
+  },
+  "individuals": [
+    {
+      "id": 0,
+      "fitness": Infinity,
+      "parameters": {
+        "4": 0.843889854600329,
+        "32": 0.9507143064099162
+      }
+    },
+    {
+      "id": 1,
+      "fitness": Infinity,
+      "parameters": {
+        "4": 1.2886708297129603,
+        "32": 0.5986584841970366
+      }
+    },
+    {
+      "id": 2,
+      "fitness": Infinity,
+      "parameters": {
+        "4": 0.5719828556988964,
+        "32": 0.15599452033620265
+      }
+    },
+    {
+      "id": 3,
+      "fitness": Infinity,
+      "parameters": {
+        "4": 0.45012197584510866,
+        "32": 0.8661761457749352
+      }
+    },
+    {
+      "id": 4,
+      "fitness": Infinity,
+      "parameters": {
+        "4": 1.1258177438102086,
+        "32": 0.7080725777960455
+      }
+    },
+    {
+      "id": 5,
+      "fitness": Infinity,
+      "parameters": {
+        "4": 0.40346169935164383,
+        "32": 0.9699098521619943
+      }
+    },
+    {
+      "id": 6,
+      "fitness": Infinity,
+      "parameters": {
+        "4": 1.4136594783575835,
+        "32": 0.21233911067827616
+      }
+    },
+    {
+      "id": 7,
+      "fitness": Infinity,
+      "parameters": {
+        "4": 0.6040937535130095,
+        "32": 0.18340450985343382
+      }
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
+import time
 
 from serum_evolver.src.ranking.population_ranker import GAPopulationRanker, JSIFitnessEvaluator
 
@@ -225,6 +226,73 @@ class TestJSIFitnessEvaluator:
 
         assert info['comparison_count'] == 10
         assert info['generation_count'] == 3
+
+
+class TestGAPopulationRankerAdditionalCoverage:
+    """Additional tests to improve coverage for GAPopulationRanker."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.audio_dir = Path("/tmp/test_audio")
+        self.ranker = GAPopulationRanker(self.audio_dir, show_live_ranking=True)
+
+    @patch('serum_evolver.src.ranking.display_utils.create_ranking_table')
+    @patch('rich.console.Console')
+    @patch('time.sleep')
+    def test_show_live_ranking(self, mock_sleep, mock_console_class, mock_create_table):
+        """Test the _show_live_ranking method (lines 231-246)."""
+        mock_console = Mock()
+        mock_console_class.return_value = mock_console
+        mock_table = Mock()
+        mock_create_table.return_value = mock_table
+
+        tracker = Mock()
+        tracker.get_simple_ranking.return_value = [('sol_001', '1'), ('sol_002', '2')]
+
+        # Test with show_live_ranking enabled
+        ranker = GAPopulationRanker(Path("/tmp"), show_live_ranking=True)
+        ranker.generation_count = 5
+        ranker.comparison_count = 10
+
+        ranker._show_live_ranking(tracker)
+
+        # Verify console interactions
+        mock_console.clear.assert_called_once()
+        mock_console.print.assert_called_once_with(mock_table)
+        mock_sleep.assert_called_once_with(0.1)
+
+        # Verify table creation
+        mock_create_table.assert_called_once_with(
+            [('sol_001', '1'), ('sol_002', '2')],
+            title="Live JSI Ranking (Gen 5, 10 comparisons)"
+        )
+
+    def test_show_live_ranking_disabled(self):
+        """Test _show_live_ranking when disabled (lines 231-232)."""
+        ranker = GAPopulationRanker(Path("/tmp"), show_live_ranking=False)
+        tracker = Mock()
+
+        # Should return early without doing anything
+        with patch('rich.console.Console') as mock_console_class:
+            ranker._show_live_ranking(tracker)
+            mock_console_class.assert_not_called()
+
+    def test_find_matching_audio_path_fuzzy_individual_number(self):
+        """Test _find_matching_audio_path with individual number extraction (line 212)."""
+        ranker = GAPopulationRanker(Path("/tmp"))
+
+        # Test with solution_id containing number that matches path key
+        audio_paths = {
+            '001': Path('/tmp/audio/001.wav'),
+            '002': Path('/tmp/audio/002.wav')
+        }
+
+        # Test fuzzy matching by number (lines 210-212)
+        result = ranker._find_matching_audio_path('solution_001', audio_paths)
+        assert result == Path('/tmp/audio/001.wav')
+
+        result = ranker._find_matching_audio_path('gen_002_best', audio_paths)
+        assert result == Path('/tmp/audio/002.wav')
 
 
 if __name__ == "__main__":

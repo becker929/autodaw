@@ -1,0 +1,36 @@
+{
+  "name": "complete_test_workflow",
+  "constraint_set": {
+    "4": [
+      0.3778483449631851,
+      1.622151655036815
+    ],
+    "32": [
+      0.0,
+      1.0
+    ]
+  },
+  "target_parameters": {
+    "4": 0.8838771742781489,
+    "32": 0.9430842513713091
+  },
+  "feature_weights": {
+    "spectral_centroid": 1.1283237658924743,
+    "spectral_bandwidth": 1.1430572099546628,
+    "spectral_rolloff": 0.8052505523436981,
+    "spectral_contrast": 0.861011262932975,
+    "spectral_flatness": 0.0,
+    "zero_crossing_rate": 1.059057101822934,
+    "rms_energy": 0.8398936916175598,
+    "chroma_mean": 0.0,
+    "tonnetz_mean": 0.0,
+    "mfcc_mean": 1.029214946943656,
+    "tempo": 0.0
+  },
+  "population_size": 8,
+  "n_generations": 3,
+  "parameter_info": {
+    "4": "Oscillator A Level",
+    "32": "Env Sustain"
+  }
+}

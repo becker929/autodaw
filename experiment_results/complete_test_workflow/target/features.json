@@ -1,0 +1,13 @@
+{
+  "spectral_centroid": 5036.145204057314,
+  "spectral_bandwidth": 3246.5782974316066,
+  "spectral_rolloff": 9621.444384544684,
+  "spectral_contrast": 19.781643749032717,
+  "spectral_flatness": 0.0,
+  "zero_crossing_rate": 0.16200774179864252,
+  "rms_energy": 0.0383593924343586,
+  "chroma_mean": 0.0,
+  "tonnetz_mean": 0.0,
+  "mfcc_mean": -648.6033935546875,
+  "tempo": 0.0
+}
