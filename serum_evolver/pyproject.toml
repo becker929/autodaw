@@ -1,0 +1,48 @@
+[project]
+name = "serum-evolver"
+version = "1.0.0"
+description = "Evolutionary optimization for Serum synthesizer parameters"
+authors = [
+    {name = "SerumEvolver Team"}
+]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.21.0",
+    "librosa>=0.10.0",
+    "pymoo>=0.6.0",
+    "rich>=13.0.0",
+    "choix>=0.3.0",
+    "pathlib",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/experiment_scripts/*",
+]

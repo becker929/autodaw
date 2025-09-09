@@ -1,3 +1,1 @@
-"""
-Unit tests for the serum_evolver package.
-"""
+"""Unit tests for SerumEvolver."""

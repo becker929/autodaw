@@ -1,28 +1,16 @@
-"""SerumEvolver: Evolutionary audio synthesis optimization."""
+"""
+SerumEvolver: Evolutionary optimization for Serum synthesizer parameters.
 
-from .interfaces import (
-    FeatureWeights,
-    ScalarFeatures,
-    SerumParameters,
-    ParameterConstraintSet,
-)
+A complete solution for evolving Serum synthesizer parameters using:
+- Genetic algorithms (GA) with pymoo
+- Just-Noticeable-Difference Sorting and Identification (JSI)
+- Audio comparison oracles using librosa
+- REAPER DAW integration for audio rendering
+- Comprehensive experiment management and artifact organization
+"""
 
-from .parameter_manager import ISerumParameterManager, SerumParameterManager
-from .feature_extractor import IFeatureExtractor, LibrosaFeatureExtractor
-from .audio_generator import IAudioGenerator, SerumAudioGenerator
-from .ga_engine import ISerumEvolver, AdaptiveSerumEvolver
+# Import from src
+from .src import *
 
-__all__ = [
-    'FeatureWeights',
-    'ScalarFeatures',
-    'SerumParameters',
-    'ParameterConstraintSet',
-    'ISerumParameterManager',
-    'SerumParameterManager',
-    'IFeatureExtractor',
-    'LibrosaFeatureExtractor',
-    'IAudioGenerator',
-    'SerumAudioGenerator', 
-    'ISerumEvolver',
-    'AdaptiveSerumEvolver',
-]
+__version__ = "1.0.0"
+__author__ = "SerumEvolver Team"
