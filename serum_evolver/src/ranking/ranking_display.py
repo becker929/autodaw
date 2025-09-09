@@ -64,20 +64,3 @@ class SilentRankingDisplayer:
         pass
 
 
-class LoggingRankingDisplayer:
-    """Displayer that logs ranking to console without Rich formatting."""
-
-    def show_ranking(
-        self,
-        tracker: SimpleRankingTracker,
-        generation: int,
-        comparison_count: int
-    ) -> None:
-        """Log current ranking to console."""
-        current_ranking = tracker.get_simple_ranking()
-        print(f"\n=== JSI Ranking Generation {generation} ===")
-        print(f"Comparisons: {comparison_count}")
-
-        for i, (item, rank) in enumerate(current_ranking, 1):
-            print(f"{i}. {item} (rank: {rank})")
-        print()

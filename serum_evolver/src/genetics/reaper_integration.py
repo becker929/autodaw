@@ -4,16 +4,11 @@ Handles session execution, audio rendering, and result collection.
 """
 
 import subprocess
-import time
-import shutil
-from pathlib import Path
-from typing import List, Dict, Optional, Tuple
-import json
 import os
 import signal
-from .config import SessionConfig, RenderConfig
-from .genetics import Solution
-from .audio_analysis import FrequencyDistanceCalculator
+from pathlib import Path
+from typing import Dict
+from .config import SessionConfig
 
 
 class ReaperExecutor:
@@ -55,7 +50,7 @@ class ReaperExecutor:
         try:
             os.chdir(self.reaper_project_path)
 
-            # Start REAPER in background [[memory:7053637]]
+            # Start REAPER in background
             cmd = ["uv", "run", "python", "main.py"]
 
             print(f"Executing REAPER session: {session_name}")
@@ -128,180 +123,3 @@ class ReaperExecutor:
 
         # Fallback: use the directory name
         return dir_name
-
-
-class FitnessEvaluator:
-    """Evaluate fitness of genetic algorithm solutions using audio analysis"""
-
-    def __init__(
-        self,
-        target_audio_path: Optional[Path] = None,
-        distance_calculator: Optional[FrequencyDistanceCalculator] = None
-    ):
-        """Initialize fitness evaluator with target audio and distance calculator"""
-        self.target_audio_path = target_audio_path
-        self.distance_calculator = distance_calculator or FrequencyDistanceCalculator()
-        self._target_audio = None
-
-        if target_audio_path and target_audio_path.exists():
-            self._target_audio = self.distance_calculator.load_audio(target_audio_path)
-
-    def set_target_audio(self, target_audio_path: Path) -> None:
-        """Set the target audio for fitness evaluation"""
-        self.target_audio_path = target_audio_path
-        self._target_audio = self.distance_calculator.load_audio(target_audio_path)
-
-    def evaluate_solution(self, solution: Solution, rendered_audio_path: Path) -> float:
-        """Evaluate fitness of a single solution based on rendered audio"""
-        if not rendered_audio_path.exists():
-            # Penalize missing audio files heavily
-            return 1000.0
-
-        if self._target_audio is None:
-            # If no target audio, use parameter-based fitness
-            return self._parameter_based_fitness(solution)
-
-        try:
-            # Load rendered audio
-            rendered_audio = self.distance_calculator.load_audio(rendered_audio_path)
-
-            # Calculate frequency domain distance
-            distance = self.distance_calculator.compute_frequency_distance(
-                self._target_audio, rendered_audio
-            )
-
-            return distance
-
-        except Exception as e:
-            print(f"Error evaluating audio {rendered_audio_path}: {e}")
-            # Return high penalty for evaluation errors
-            return 500.0
-
-    def _parameter_based_fitness(self, solution: Solution) -> float:
-        """Fallback fitness based on parameter values when no target audio is available"""
-        # Simple fitness function: prefer values closer to center
-        octave_penalty = abs(solution.octave) * 0.5
-        fine_penalty = abs(solution.fine) * 0.3
-        return octave_penalty + fine_penalty
-
-    def evaluate_population(
-        self,
-        solutions: List[Solution],
-        render_paths: Dict[str, Path]
-    ) -> List[float]:
-        """Evaluate fitness for entire population"""
-        fitness_values = []
-
-        for i, solution in enumerate(solutions):
-            individual_id = f"individual_{i:03d}"
-
-            # Find matching rendered audio file
-            matching_path = None
-            for path_id, path in render_paths.items():
-                if individual_id in path_id:
-                    matching_path = path
-                    break
-
-            if matching_path is None:
-                # No matching render found
-                fitness = 1000.0
-                print(f"Warning: No rendered audio found for {individual_id}")
-                print(f"Available renders: {list(render_paths.keys())}")
-            else:
-                fitness = self.evaluate_solution(solution, matching_path)
-                print(f"Solution {i}: fitness = {fitness:.4f} (audio: {matching_path.name})")
-
-            fitness_values.append(fitness)
-
-        return fitness_values
-
-
-class ReaperGAIntegration:
-    """Complete integration between genetic algorithm and REAPER"""
-
-    def __init__(
-        self,
-        reaper_project_path: Path,
-        target_audio_path: Optional[Path] = None,
-        session_name_prefix: str = "ga_optimization"
-    ):
-        """Initialize GA-REAPER integration"""
-        self.reaper_project_path = reaper_project_path
-        self.session_name_prefix = session_name_prefix
-        self.executor = ReaperExecutor(reaper_project_path)
-        self.evaluator = FitnessEvaluator(target_audio_path)
-        self.generation_counter = 0
-
-    def evaluate_population_fitness(self, solutions: List[Solution]) -> List[float]:
-        """Evaluate fitness for entire population by rendering and analyzing audio"""
-        self.generation_counter += 1
-        session_name = f"{self.session_name_prefix}_gen_{self.generation_counter:03d}"
-
-        print(f"\n=== Evaluating Generation {self.generation_counter} ===")
-        print(f"Population size: {len(solutions)}")
-
-        # Convert solutions to render configs
-        from .genetics import GenomeToPhenotypeMapper
-        mapper = GenomeToPhenotypeMapper()
-        render_configs = mapper.population_to_render_configs(solutions, session_name)
-
-        # Create session config
-        session_config = SessionConfig(
-            session_name=session_name,
-            render_configs=render_configs
-        )
-
-        # Execute REAPER session
-        try:
-            render_paths = self.executor.execute_session(session_config)
-            print(f"Rendered {len(render_paths)} audio files")
-
-            # Evaluate fitness
-            fitness_values = self.evaluator.evaluate_population(solutions, render_paths)
-
-            # Log generation statistics
-            self._log_generation_stats(self.generation_counter, solutions, fitness_values)
-
-            return fitness_values
-
-        except Exception as e:
-            print(f"Error during population evaluation: {e}")
-            # Return high penalty values for all solutions
-            return [1000.0] * len(solutions)
-
-    def _log_generation_stats(
-        self,
-        generation: int,
-        solutions: List[Solution],
-        fitness_values: List[float]
-    ) -> None:
-        """Log statistics for the current generation"""
-        best_fitness = min(fitness_values)
-        worst_fitness = max(fitness_values)
-        avg_fitness = sum(fitness_values) / len(fitness_values)
-
-        best_idx = fitness_values.index(best_fitness)
-        best_solution = solutions[best_idx]
-
-        print(f"\nGeneration {generation} Statistics:")
-        print(f"  Best fitness: {best_fitness:.4f}")
-        print(f"  Worst fitness: {worst_fitness:.4f}")
-        print(f"  Average fitness: {avg_fitness:.4f}")
-        print(f"  Best solution: {best_solution}")
-        print(f"  Frequency ratio: {best_solution.calculate_frequency_ratio():.4f}")
-
-    def cleanup_old_renders(self, keep_generations: int = 3) -> None:
-        """Clean up old render directories to save disk space"""
-        if self.generation_counter <= keep_generations:
-            return
-
-        cleanup_gen = self.generation_counter - keep_generations
-        cleanup_pattern = f"{self.session_name_prefix}_gen_{cleanup_gen:03d}"
-
-        for render_dir in self.executor.renders_dir.iterdir():
-            if render_dir.is_dir() and cleanup_pattern in render_dir.name:
-                try:
-                    shutil.rmtree(render_dir)
-                    print(f"Cleaned up old render directory: {render_dir}")
-                except Exception as e:
-                    print(f"Warning: Could not clean up {render_dir}: {e}")

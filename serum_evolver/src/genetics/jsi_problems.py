@@ -9,7 +9,7 @@ from .genetics import Solution, GenomeToPhenotypeMapper
 from .reaper_integration import ReaperExecutor
 from .config import SessionConfig
 from ..audio.oracle import AudioComparisonOracle, FrequencyTargetOracle
-from ..ranking.population_ranker import JSIFitnessEvaluator
+from ..ranking.population_ranker import create_standard_fitness_evaluator
 
 
 class JSIAudioOptimizationProblem(Problem):
@@ -64,11 +64,10 @@ class JSIAudioOptimizationProblem(Problem):
             )
             print(f"Using target frequency: {target_frequency} Hz")
 
-        # Initialize JSI fitness evaluator
-        # Note: Don't store Console object directly to avoid serialization issues with pymoo
-        self.jsi_evaluator = JSIFitnessEvaluator(
+        # Initialize JSI fitness evaluator using factory function
+        self.jsi_evaluator = create_standard_fitness_evaluator(
             oracle=self.oracle,
-            console=None  # Will create console when needed
+            show_live_ranking=self.show_live_ranking
         )
         self.show_live_ranking = show_live_ranking
 
