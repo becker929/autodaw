@@ -1,0 +1,70 @@
+{
+  "session_name": "generation_000",
+  "render_configs": [
+    {
+      "render_id": "generation_000_individual_000_91625",
+      "tracks": [
+        {
+          "index": 0,
+          "name": "Serum Track",
+          "fx_chain": [
+            {
+              "name": "Serum",
+              "plugin_name": "Serum"
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "MasterVol",
+          "value": 0.5
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Octave",
+          "value": 0.8838771742781489
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "12",
+          "value": 0.5
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "16",
+          "value": 0.5
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "24",
+          "value": 0.5
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "32",
+          "value": 0.9430842513713091
+        }
+      ],
+      "midi_files": {
+        "0": "test_melody.mid"
+      },
+      "render_options": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "render_format": "",
+        "bpm": 148,
+        "note": "C4",
+        "duration": "whole"
+      },
+      "output_path": "/Users/anthonybecker/Desktop/tmsmsm/autodaw/reaper/renders/complete_test_workflow_target/generation_000/renders/individual_000"
+    }
+  ]
+}
