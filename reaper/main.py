@@ -120,6 +120,18 @@ def execute_reaper_with_session(session_file: str = None) -> subprocess.Complete
     """
     Execute REAPER with the specified session using log monitoring and process management.
     """
+    # Write the session filename to current_session.txt for Lua script
+    if session_file:
+        with open("current_session.txt", "w") as f:
+            f.write(session_file)
+        print(f"Set session file: {session_file}")
+    else:
+        # Fallback to detecting latest session
+        session_file = detect_latest_session()
+        with open("current_session.txt", "w") as f:
+            f.write(session_file)
+        print(f"Auto-detected session file: {session_file}")
+    
     # Determine REAPER executable path based on platform
     import platform
     system = platform.system()

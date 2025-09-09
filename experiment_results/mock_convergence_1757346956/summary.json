@@ -1,0 +1,44 @@
+{
+  "timestamp": 1757346972.01296,
+  "total_experiments": 6,
+  "successful": 0,
+  "converged": 0,
+  "experiments": [
+    {
+      "name": "Simple Volume Control",
+      "success": false,
+      "error": "Evolutionary optimization failed: 'best'",
+      "experiment_time": 10.68562912940979
+    },
+    {
+      "name": "Filter Optimization",
+      "success": false,
+      "error": "Evolutionary optimization failed: 'best'",
+      "experiment_time": 0.7593936920166016
+    },
+    {
+      "name": "Envelope Shaping",
+      "success": false,
+      "error": "Evolutionary optimization failed: 'best'",
+      "experiment_time": 0.7070498466491699
+    },
+    {
+      "name": "Complex Multi-Parameter",
+      "success": false,
+      "error": "Evolutionary optimization failed: 'best'",
+      "experiment_time": 1.0567491054534912
+    },
+    {
+      "name": "Large Population Test",
+      "success": false,
+      "error": "Evolutionary optimization failed: 'best'",
+      "experiment_time": 0.8871293067932129
+    },
+    {
+      "name": "Long Evolution Test",
+      "success": false,
+      "error": "Evolutionary optimization failed: 'best'",
+      "experiment_time": 1.0564920902252197
+    }
+  ]
+}

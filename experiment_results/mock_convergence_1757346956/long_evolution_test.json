@@ -1,0 +1,6 @@
+{
+  "name": "Long Evolution Test",
+  "success": false,
+  "error": "Evolutionary optimization failed: 'best'",
+  "experiment_time": 1.0564920902252197
+}

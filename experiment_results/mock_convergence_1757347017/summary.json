@@ -1,0 +1,44 @@
+{
+  "timestamp": 1757347024.076064,
+  "total_experiments": 6,
+  "successful": 0,
+  "converged": 0,
+  "experiments": [
+    {
+      "name": "Simple Volume Control",
+      "success": false,
+      "error": "'best_parameters'",
+      "experiment_time": 1.8287880420684814
+    },
+    {
+      "name": "Filter Optimization",
+      "success": false,
+      "error": "'best_parameters'",
+      "experiment_time": 0.5039317607879639
+    },
+    {
+      "name": "Envelope Shaping",
+      "success": false,
+      "error": "'best_parameters'",
+      "experiment_time": 0.6879353523254395
+    },
+    {
+      "name": "Complex Multi-Parameter",
+      "success": false,
+      "error": "'best_parameters'",
+      "experiment_time": 1.2422246932983398
+    },
+    {
+      "name": "Large Population Test",
+      "success": false,
+      "error": "'best_parameters'",
+      "experiment_time": 0.9688160419464111
+    },
+    {
+      "name": "Long Evolution Test",
+      "success": false,
+      "error": "'best_parameters'",
+      "experiment_time": 1.4384148120880127
+    }
+  ]
+}

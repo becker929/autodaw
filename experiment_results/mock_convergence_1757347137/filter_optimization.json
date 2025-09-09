@@ -1,0 +1,66 @@
+{
+  "name": "Filter Optimization",
+  "success": true,
+  "converged": false,
+  "final_fitness": 1247.7660731996464,
+  "fitness_improvement": 0.0,
+  "generations_run": 1,
+  "experiment_time": 0.5326182842254639,
+  "best_parameters": {
+    "1": 0.5,
+    "4": 1.0,
+    "8": 1.0,
+    "12": 0.004856572690691929,
+    "16": 0.698414934953943,
+    "20": 0.5,
+    "24": 0.5,
+    "28": 0.5,
+    "32": 0.5,
+    "36": 0.5,
+    "40": 0.5,
+    "44": 0.5
+  },
+  "fitness_history": [
+    1247.7660731996464
+  ],
+  "config": {
+    "constraint_set": {
+      "12": [
+        0.0,
+        1.0
+      ],
+      "16": [
+        0.0,
+        0.7
+      ]
+    },
+    "target_features": {
+      "spectral_centroid": 2000.0,
+      "spectral_bandwidth": 0.0,
+      "spectral_rolloff": 0.0,
+      "spectral_contrast": 0.0,
+      "spectral_flatness": 0.0,
+      "zero_crossing_rate": 0.0,
+      "rms_energy": 0.6,
+      "chroma_mean": 0.0,
+      "tonnetz_mean": 0.0,
+      "mfcc_mean": 0.0,
+      "tempo": 0.0
+    },
+    "feature_weights": {
+      "spectral_centroid": 0.7,
+      "spectral_bandwidth": 0.0,
+      "spectral_rolloff": 0.0,
+      "spectral_contrast": 0.0,
+      "spectral_flatness": 0.0,
+      "zero_crossing_rate": 0.0,
+      "rms_energy": 0.3,
+      "chroma_mean": 0.0,
+      "tonnetz_mean": 0.0,
+      "mfcc_mean": 0.0,
+      "tempo": 0.0
+    },
+    "population_size": 10,
+    "n_generations": 12
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "name": "Large Population Test",
+  "success": true,
+  "converged": false,
+  "final_fitness": 2202.1409878451905,
+  "fitness_improvement": 0.0,
+  "generations_run": 1,
+  "experiment_time": 0.7524588108062744,
+  "best_parameters": {
+    "1": 0.22410809724789577,
+    "4": 1.798310994454663,
+    "8": 1.0,
+    "12": 0.3035371317816681,
+    "16": 0.5,
+    "20": 0.5,
+    "24": 0.5,
+    "28": 0.5,
+    "32": 0.5,
+    "36": 0.5,
+    "40": 0.5,
+    "44": 0.5
+  },
+  "fitness_history": [
+    2202.1409878451905
+  ],
+  "config": {
+    "constraint_set": {
+      "1": [
+        0.2,
+        1.0
+      ],
+      "4": [
+        0.5,
+        2.0
+      ],
+      "12": [
+        0.3,
+        1.0
+      ]
+    },
+    "target_features": {
+      "spectral_centroid": 1600.0,
+      "spectral_bandwidth": 0.0,
+      "spectral_rolloff": 0.0,
+      "spectral_contrast": 0.0,
+      "spectral_flatness": 0.0,
+      "zero_crossing_rate": 0.0,
+      "rms_energy": 0.7,
+      "chroma_mean": 0.0,
+      "tonnetz_mean": 0.0,
+      "mfcc_mean": 0.0,
+      "tempo": 0.0
+    },
+    "feature_weights": {
+      "spectral_centroid": 0.8,
+      "spectral_bandwidth": 0.0,
+      "spectral_rolloff": 0.0,
+      "spectral_contrast": 0.0,
+      "spectral_flatness": 0.0,
+      "zero_crossing_rate": 0.0,
+      "rms_energy": 0.2,
+      "chroma_mean": 0.0,
+      "tonnetz_mean": 0.0,
+      "mfcc_mean": 0.0,
+      "tempo": 0.0
+    },
+    "population_size": 24,
+    "n_generations": 8
+  }
+}

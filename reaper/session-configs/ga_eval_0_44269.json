@@ -1,0 +1,69 @@
+{
+  "session_name": "ga_eval_0_44269",
+  "render_configs": [
+    {
+      "render_id": "ga_eval_0_44269_d8f0bcfb",
+      "tracks": [
+        {
+          "index": 0,
+          "name": "Serum Track",
+          "fx_chain": [
+            {
+              "name": "Serum",
+              "plugin_name": "Serum"
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "MasterVol",
+          "value": 0.5621780831931538
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "A Octave",
+          "value": 1.0
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "12",
+          "value": 0.9507143064099162
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "16",
+          "value": 0.5
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "24",
+          "value": 0.5
+        },
+        {
+          "track": "0",
+          "fx": "Serum",
+          "param": "32",
+          "value": 0.5
+        }
+      ],
+      "midi_files": {
+        "0": "test_melody.mid"
+      },
+      "render_options": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "render_format": "",
+        "bpm": 148,
+        "note": "C4",
+        "duration": "whole"
+      }
+    }
+  ]
+}
