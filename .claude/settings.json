@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "Agent(*)",
+      "Skill(*)",
+      "mcp__*"
+    ],
+    "deny": [
+      "Write(//Users/anthonybecker/_tmsmsm/**)",
+      "Edit(//Users/anthonybecker/_tmsmsm/**)",
+      "Read(//Users/anthonybecker/sandbox/autodaw/hands/frontend/.env)"
+    ]
+  }
+}

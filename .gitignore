@@ -1,6 +1,23 @@
 .DS_Store
 Archive/
 **/.DS_Store
+
+# Large media trees. Never stage these.
+audio-library/
+compost
+Live projects/
+
+# audio-browser
+audio-browser/.venv/
+audio-browser/.mypy_cache/
+audio-browser/.pytest_cache/
+audio-browser/**/__pycache__/
+audio-browser/frontend/node_modules/
+audio-browser/frontend/.next/
+audio-browser/*.db
+audio-browser/*.db-wal
+audio-browser/*.db-shm
+audio-browser/config.toml
 reaper/renders/*
 reaper/current_session.txt
 reaper/session-results/*.log
