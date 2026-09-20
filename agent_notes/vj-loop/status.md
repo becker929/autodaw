@@ -17,6 +17,12 @@
 - H.264 at CRF 14 by default. ProRes and HEVC are flags.
 - Franchise looks are described, not named: "shape-shifting armor", not a brand.
 
+## Final render (2026-09-20)
+
+- `vj-loop/out/factory-loop.mp4`: 3840x2160, 60 fps, 1800 frames, 30.000 s, H.264 High, yuv420p, BT.709 limited range, 143 Mbps, 538 MB.
+- It took about 25 minutes on the M1 at about 0.83 s per frame, with 8 subframes. The browser did not restart during the render.
+- The file is git-ignored. It lives only in the worktree `.worktrees/vj-loop/`. Copy it out before removing that worktree.
+
 ## Open items
 
 - Docker was not running on 2026-09-20, so checks ran on the host, not in a container.
@@ -24,6 +30,7 @@
 - Chrome reflections come from one baked environment map. They do not show neighboring machines.
 - The render page crashed once ("Target crashed") at about frame 1200 of a small full-loop run on 2026-09-20. The cause is unknown. It did not repeat on the next run. The session now restarts the browser and retries the frame; that recovery is proven by killing the renderer process mid-render and getting a bit-identical video.
 - H.264 at 4:2:0 softens thin neon lines (red and blue PSNR about 33 dB against the source, green about 42 dB). Use `--codec prores` when that matters.
+- 143 Mbps UHD H.264 may be heavy to decode live next to other layers. Playback in VJ software was not tested. Re-encode with a higher `--crf`, or render at 1920x1080, if it stutters.
 - VJ software often prefers HAP or DXV. ffmpeg here was not checked for a HAP encoder. `--gop 1` is the nearest option today.
 - The flash check is an estimate, not a certified Harding test. Get a certified test before any broadcast use.
 
