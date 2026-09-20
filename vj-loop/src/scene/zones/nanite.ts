@@ -88,7 +88,7 @@ export const buildNanite: ModuleBuilder = (kit, slot, rand) => {
     ribs.push(onRing(r + 0.4, a, -len / 2, 0.22, 0.5, len));
     if (i % 2 === 0) ribs.push(onRing(r + 0.1, a, -len * (0.2 + rand() * 0.6), 0.7, 0.4, 1.4 + rand() * 2));
   }
-  group.add(instancedBoxes(kit, kit.steel, ribs));
+  group.add(instancedBoxes(kit, kit.steelPanel, ribs));
   const lights: Placement[] = [];
   for (let i = 0; i < 5; i++) {
     const a = (i / 5) * Math.PI * 2 + slot.index * 0.63;
@@ -99,7 +99,7 @@ export const buildNanite: ModuleBuilder = (kit, slot, rand) => {
   // Rail pylons: the rail is a bridge through the chamber.
   const pylons: Placement[] = [];
   for (const z of [-len * 0.25, -len * 0.75]) pylons.push({ x: 0, y: FLOOR_Y - 3.6, z, rz: 0, sx: 0.5, sy: 7, sz: 0.5 });
-  group.add(instancedBoxes(kit, kit.dark, pylons));
+  group.add(instancedBoxes(kit, kit.darkPanel, pylons));
 
   if (edge > 0) group.add(buildSwarm(kit, rand));
 

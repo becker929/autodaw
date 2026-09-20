@@ -108,3 +108,16 @@ describe("randomness", () => {
     fc.assert(fc.property(fc.integer(), (n) => hash01(n) >= 0 && hash01(n) < 1));
   });
 });
+
+describe("cellDividing", () => {
+  it("returns a cell that tiles the lap a whole number of times and is no larger than asked", async () => {
+    const { cellDividing } = await import("../src/scene/kit");
+    fc.assert(
+      fc.property(fc.double({ min: 10, max: 5000, noNaN: true }), fc.double({ min: 0.05, max: 5, noNaN: true }), (length, want) => {
+        const cell = cellDividing(length, want);
+        const n = length / cell;
+        return cell <= want + 1e-12 && Math.abs(n - Math.round(n)) < 1e-6;
+      }),
+    );
+  });
+});

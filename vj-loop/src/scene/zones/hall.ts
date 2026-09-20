@@ -23,7 +23,7 @@ export const buildHall: ModuleBuilder = (kit, slot, rand) => {
     { x: -4.2, y: FLOOR_Y - 0.5, z: 0, rz: 0, sx: HALF_W * 2 - 5.2, sy: 0.9, sz: 1.0 },
     { x: 4.2, y: FLOOR_Y - 0.5, z: 0, rz: 0, sx: HALF_W * 2 - 5.2, sy: 0.9, sz: 1.0 },
   ];
-  group.add(instancedBoxes(kit, kit.dark, frame));
+  group.add(instancedBoxes(kit, kit.darkPanel, frame));
   const trim = slot.downbeat ? kit.glows.white : kit.glows.magenta;
   const trimItems: Placement[] = [
     { x: -HALF_W + 0.02, y: (ROOF_Y + FLOOR_Y) / 2, z: 0.2, rz: 0, sx: 0.06, sy: ROOF_Y - FLOOR_Y, sz: 0.06 },
@@ -48,7 +48,7 @@ export const buildHall: ModuleBuilder = (kit, slot, rand) => {
       sz: 0.4 + rand() * 2.4,
     });
   }
-  group.add(instancedBoxes(kit, kit.steel, detail));
+  group.add(instancedBoxes(kit, kit.steelPanel, detail));
 
   // Lit cores behind the armour. Hidden until the plates swing away.
   const cores: Placement[] = [];

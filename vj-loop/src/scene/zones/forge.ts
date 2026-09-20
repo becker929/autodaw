@@ -144,8 +144,8 @@ export const buildForge: ModuleBuilder = (kit, slot, rand) => {
   group.add(lightStrips(kit, R, len, kit.glows.orange, kit.glows.cyan));
   group.add(pipeRuns(kit, R, len, [0.5, 1.1, 2.0, 2.6, 3.6, 5.8]));
   const greebles = wallGreebles(rand, R, len, 320);
-  group.add(instancedBoxes(kit, kit.steel, greebles.filter((_, i) => i % 2 === 0)));
-  group.add(instancedBoxes(kit, kit.dark, greebles.filter((_, i) => i % 2 === 1)));
+  group.add(instancedBoxes(kit, kit.steelPanel, greebles.filter((_, i) => i % 2 === 0)));
+  group.add(instancedBoxes(kit, kit.darkPanel, greebles.filter((_, i) => i % 2 === 1)));
 
   // Arms on every module, mirrored left and right, on the upper half of the ring.
   const arms: Arm[] = [];

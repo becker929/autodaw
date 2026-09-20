@@ -21,15 +21,22 @@ export interface Glow {
 
 export interface Kit {
   loop: Loop;
+  /** Plain metals. Use these on parts that move, because the panel pattern below is fixed in world space. */
   chrome: THREE.MeshStandardMaterial;
   steel: THREE.MeshStandardMaterial;
   dark: THREE.MeshStandardMaterial;
+  /** Metals with fine panel lines. Use these on static structure. */
+  chromePanel: THREE.MeshStandardMaterial;
+  steelPanel: THREE.MeshStandardMaterial;
+  darkPanel: THREE.MeshStandardMaterial;
   glows: Record<keyof typeof COLORS, Glow>;
   box: THREE.BoxGeometry;
   cyl: THREE.CylinderGeometry;
   /** Shared shader uniforms. The world writes them once per render. */
   uBeat: { value: number };
   uPhase: { value: number };
+  /** Camera position on the track, wrapped to one lap. Shaders add it to world z to get track z. */
+  uTrackZ: { value: number };
 }
 
 export interface FactoryModule {
@@ -45,12 +52,82 @@ function glow(color: THREE.Color, base: number, kick: number): Glow {
   return { mat, color, base, kick };
 }
 
+const PANEL_VERTEX = /* glsl */ `
+  vec4 panelWorld = vec4(transformed, 1.0);
+  #ifdef USE_INSTANCING
+    panelWorld = instanceMatrix * panelWorld;
+  #endif
+  vPanelPos = (modelMatrix * panelWorld).xyz;
+  vPanelPos.z += uTrackZ; // from camera-relative z to position on the track
+`;
+
+// Panel seams and per-panel finish, computed from world position at two scales.
+// Both cell sizes divide the lap length, so the pattern is the same after a full lap.
+const PANEL_FRAGMENT = /* glsl */ `
+  {
+    vec3 faceN = abs(normalize(cross(dFdx(vPanelPos), dFdy(vPanelPos))));
+    float seam = 0.0;
+    float finish = 0.0;
+    for (int i = 0; i < 2; i++) {
+      float cell = i == 0 ? uPanelCells.x : uPanelCells.y;
+      vec3 q = vPanelPos / cell;
+      vec3 w = clamp(fwidth(q) * 1.5, 0.0, 0.5);
+      vec3 d = abs(fract(q) - 0.5);
+      vec3 edge = smoothstep(0.5 - 0.035 - w, 0.5 - w * 0.5, d);
+      // A seam only shows on faces it runs across, not on the face it is parallel to.
+      float line = max(max(edge.x * (1.0 - faceN.x), edge.y * (1.0 - faceN.y)), edge.z * (1.0 - faceN.z));
+      // Fade the fine scale out with distance so it never shimmers.
+      float keep = 1.0 - smoothstep(0.15, 0.5, max(w.x, max(w.y, w.z)));
+      vec3 id = floor(q);
+      // Wrap the panel index along the track by the number of cells in one lap.
+      // Without this, every panel would get a new finish each lap and the loop would not close.
+      id.z = mod(id.z, i == 0 ? uPanelCells.z : uPanelCells.w);
+      float h = fract(sin(dot(id, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+      seam = max(seam, line * keep * (i == 0 ? 1.0 : 0.6));
+      finish += (h - 0.5) * keep * (i == 0 ? 0.6 : 0.4);
+    }
+    diffuseColor.rgb *= (1.0 - 0.7 * seam) * (1.0 + 0.35 * finish);
+    roughnessFactor = clamp(roughnessFactor + 0.35 * seam + 0.22 * finish, 0.03, 1.0);
+  }
+`;
+
+function withPanels(base: THREE.MeshStandardMaterial, cells: THREE.Vector4, uTrackZ: { value: number }): THREE.MeshStandardMaterial {
+  const mat = base.clone();
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uPanelCells = { value: cells };
+    shader.uniforms.uTrackZ = uTrackZ;
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vPanelPos;\nuniform float uTrackZ;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\n" + PANEL_VERTEX);
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vPanelPos;\nuniform vec4 uPanelCells; // xy: cell sizes, zw: cells per lap")
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n" + PANEL_FRAGMENT);
+  };
+  mat.customProgramCacheKey = () => "panel-metal";
+  return mat;
+}
+
+/** The largest cell size at or below `want` that divides `length` a whole number of times. */
+export function cellDividing(length: number, want: number): number {
+  return length / Math.ceil(length / want);
+}
+
 export function makeKit(loop: Loop): Kit {
+  const chrome = new THREE.MeshStandardMaterial({ color: 0xf2f5f8, metalness: 1, roughness: 0.07 });
+  const steel = new THREE.MeshStandardMaterial({ color: 0x9aa3ad, metalness: 1, roughness: 0.32 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x15181c, metalness: 0.9, roughness: 0.45 });
+  const uTrackZ = { value: 0 };
+  const cellA = cellDividing(loop.length, 0.62);
+  const cellB = cellDividing(loop.length, 0.155);
+  const cells = new THREE.Vector4(cellA, cellB, Math.round(loop.length / cellA), Math.round(loop.length / cellB));
   return {
     loop,
-    chrome: new THREE.MeshStandardMaterial({ color: 0xf2f5f8, metalness: 1, roughness: 0.07 }),
-    steel: new THREE.MeshStandardMaterial({ color: 0x9aa3ad, metalness: 1, roughness: 0.32 }),
-    dark: new THREE.MeshStandardMaterial({ color: 0x15181c, metalness: 0.9, roughness: 0.45 }),
+    chromePanel: withPanels(chrome, cells, uTrackZ),
+    steelPanel: withPanels(steel, cells, uTrackZ),
+    darkPanel: withPanels(dark, cells, uTrackZ),
+    chrome,
+    steel,
+    dark,
     glows: {
       cyan: glow(COLORS.cyan, 1.5, 2.2),
       magenta: glow(COLORS.magenta, 1.5, 2.2),
@@ -61,6 +138,7 @@ export function makeKit(loop: Loop): Kit {
     cyl: new THREE.CylinderGeometry(1, 1, 1, 16, 1),
     uBeat: { value: 0 },
     uPhase: { value: 0 },
+    uTrackZ,
   };
 }
 
@@ -141,7 +219,7 @@ export function wallGreebles(rand: Rng, r: number, len: number, count: number, s
 /** The structural rib at the front of a module: a dark hoop, chrome clamps, and a thin light ring. */
 export function ringFrame(kit: Kit, r: number, light: Glow, clamps = 12): THREE.Group {
   const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.TorusGeometry(r + 0.35, 0.32, 10, 64), kit.dark));
+  g.add(new THREE.Mesh(new THREE.TorusGeometry(r + 0.35, 0.32, 10, 64), kit.darkPanel));
   const lightRing = new THREE.Mesh(new THREE.TorusGeometry(r - 0.02, 0.035, 6, 96), light.mat);
   g.add(lightRing);
   const items: Placement[] = [];
@@ -150,7 +228,7 @@ export function ringFrame(kit: Kit, r: number, light: Glow, clamps = 12): THREE.
     items.push(onRing(r + 0.2, a, 0, 1.1, 0.7, 0.9));
     items.push(onRing(r + 0.05, a, 0, 0.35, 0.35, 1.3));
   }
-  g.add(instancedBoxes(kit, kit.chrome, items));
+  g.add(instancedBoxes(kit, kit.chromePanel, items));
   return g;
 }
 
@@ -171,7 +249,7 @@ export function railBed(kit: Kit, len: number, floorY: number): THREE.Group {
     chrome.push({ x: 1.15, y: floorY + 0.08, z, rz: 0, sx: 0.18, sy: 0.12, sz: 0.3 });
   }
   g.add(instancedBoxes(kit, kit.chrome, chrome));
-  g.add(instancedBoxes(kit, kit.dark, dark));
+  g.add(instancedBoxes(kit, kit.darkPanel, dark));
   // Dashed centre light. Dashes make speed readable.
   const dashes: Placement[] = [];
   for (let i = 0; i < 4; i++) {

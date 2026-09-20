@@ -45,8 +45,9 @@ async function main(): Promise<void> {
 
     const close = meanAbsDiff(f0, fN);
     console.log(`closure       frame 0 vs frame ${N}:      mean ${close.mean.toFixed(4)} max ${close.max}`);
-    // Phase 1.0 and phase 0.0 go through different floating point paths, so allow a few levels on a few pixels.
-    if (close.mean > 0.05) failures.push(`frame ${N} differs from frame 0 (mean ${close.mean})`);
+    // The scene uses a floating origin, so phase 1.0 should give the same geometry as phase 0.0 to the bit.
+    // Allow one level of rounding. A loose threshold here once hid a panel pattern that changed every lap.
+    if (close.max > 1) failures.push(`frame ${N} differs from frame 0 (mean ${close.mean.toFixed(4)}, max ${close.max})`);
 
     // Frame 0 is a bar downbeat: lights flash and the lens kicks. So the fair comparison for the seam step
     // is the same musical event elsewhere in the loop, not an ordinary frame step.

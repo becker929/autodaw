@@ -24,8 +24,8 @@ export const buildIris: ModuleBuilder = (kit, slot, rand) => {
   group.add(lightStrips(kit, R, len, kit.glows.cyan, kit.glows.magenta));
   group.add(pipeRuns(kit, R, len, [0.5, 1.1, 2.0, 2.6, 3.6, 5.8]));
   const greebles = wallGreebles(rand, R, len, 260);
-  group.add(instancedBoxes(kit, kit.steel, greebles.filter((_, i) => i % 3 !== 0)));
-  group.add(instancedBoxes(kit, kit.chrome, greebles.filter((_, i) => i % 3 === 0)));
+  group.add(instancedBoxes(kit, kit.steelPanel, greebles.filter((_, i) => i % 3 !== 0)));
+  group.add(instancedBoxes(kit, kit.chromePanel, greebles.filter((_, i) => i % 3 === 0)));
 
   if (!slot.downbeat) return { group };
 

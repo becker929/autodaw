@@ -2,7 +2,7 @@
 // the camera, so what lies ahead at the end of the loop is what lay ahead at the start.
 import * as THREE from "three";
 import { layoutTrack, type Zone } from "../core/layout";
-import { cycle, pulse, relAhead, rng, wave, type Loop, type Time } from "../core/timeline";
+import { cycle, mod, pulse, relAhead, rng, wave, type Loop, type Time } from "../core/timeline";
 import { boxMesh, driveGlows, makeKit, type FactoryModule, type Kit, type ModuleBuilder } from "./kit";
 import { buildForge } from "./zones/forge";
 import { buildHall } from "./zones/hall";
@@ -123,7 +123,10 @@ export function buildWorld(loop: Loop, renderer: THREE.WebGLRenderer): World {
       kit.uPhase.value = t.phase;
       lamp.intensity = 5 + 14 * beatPulse;
 
-      camera.position.set(0, 0, t.camZ);
+      // Floating origin: the camera stays at z = 0 and the track slides past it. World positions then
+      // depend only on the wrapped track position, so phase 1 gives bit-identical geometry to phase 0.
+      camera.position.set(0, 0, 0);
+      kit.uTrackZ.value = mod(t.camZ, loop.length);
       // A slow roll and a kick of field of view on the beat. Whole turns per loop only.
       camera.rotation.set(0.012 * wave(t, 5), 0, 0.09 * wave(t, 2) + 0.03 * wave(t, 10, 0.25));
       camera.fov = 84 + 5 * beatPulse + 4 * barPulse;
@@ -134,7 +137,7 @@ export function buildWorld(loop: Loop, renderer: THREE.WebGLRenderer): World {
         const on = rel < DRAW_AHEAD;
         m.mod.group.visible = on;
         if (!on) continue;
-        m.mod.group.position.z = t.camZ - rel;
+        m.mod.group.position.z = -rel;
         m.mod.update?.(t, rel);
       }
     },
