@@ -33,8 +33,8 @@ export interface Kit {
   box: THREE.BoxGeometry;
   cyl: THREE.CylinderGeometry;
   /** Shared shader uniforms. The world writes them once per render. */
-  uBeat: { value: number };
-  uPhase: { value: number };
+  /** Positions inside the 1, 2, 4 and 8 beat cycles, from `cycle()`. Shaders must use these, never raw time. */
+  uCycles: { value: THREE.Vector4 };
   /** Camera position on the track, wrapped to one lap. Shaders add it to world z to get track z. */
   uTrackZ: { value: number };
 }
@@ -101,7 +101,10 @@ function withPanels(base: THREE.MeshStandardMaterial, cells: THREE.Vector4, uTra
       .replace("#include <begin_vertex>", "#include <begin_vertex>\n" + PANEL_VERTEX);
     shader.fragmentShader = shader.fragmentShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vPanelPos;\nuniform vec4 uPanelCells; // xy: cell sizes, zw: cells per lap")
-      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n" + PANEL_FRAGMENT);
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n" + PANEL_FRAGMENT)
+      // Structure right beside the camera is a fast, large smear. Left bright, it flashes a big part of the
+      // frame at random times, which is the main photosensitivity risk. So it fades toward black up close.
+      .replace("#include <fog_fragment>", "#include <fog_fragment>\ngl_FragColor.rgb *= mix(0.22, 1.0, smoothstep(2.5, 13.0, vFogDepth));");
   };
   mat.customProgramCacheKey = () => "panel-metal";
   return mat;
@@ -136,8 +139,7 @@ export function makeKit(loop: Loop): Kit {
     },
     box: new THREE.BoxGeometry(1, 1, 1),
     cyl: new THREE.CylinderGeometry(1, 1, 1, 16, 1),
-    uBeat: { value: 0 },
-    uPhase: { value: 0 },
+    uCycles: { value: new THREE.Vector4() },
     uTrackZ,
   };
 }

@@ -1,11 +1,14 @@
 // Black-box check of the rendered loop. It looks only at pixels.
 //   1. Determinism: the same frame renders to the same pixels, whatever was rendered in between.
-//   2. Closure: frame N (one full lap) equals frame 0.
-//   3. Continuity: the step across the seam (last frame -> frame 0) is no bigger than ordinary steps.
+//   2. Closure: frame f + N (one full lap later) equals frame f. This is checked inside every zone,
+//      because a part that fails to close is only visible while its zone is on screen.
+//   3. The last frame differs from the first, so the loop point does not stutter on a repeated frame.
 import { PNG } from "pngjs";
-import { openSession, parseFlags, splitFlags } from "./session";
+import { layoutTrack, ZONES } from "../src/core/layout";
+import { parseFlags, splitFlags } from "./flags";
+import { openSession } from "./session";
 
-function meanAbsDiff(a: Buffer, b: Buffer): { mean: number; max: number } {
+function diff(a: Buffer, b: Buffer): { mean: number; max: number } {
   const pa = PNG.sync.read(a);
   const pb = PNG.sync.read(b);
   if (pa.width !== pb.width || pa.height !== pb.height) throw new Error("size mismatch");
@@ -31,50 +34,40 @@ async function main(): Promise<void> {
   try {
     console.log(`gpu: ${session.gpu}; ${N} frames`);
     const f0 = await session.capture(0);
-    const f1 = await session.capture(1);
-    const fMid = await session.capture(Math.floor(N / 2));
-    const fMid1 = await session.capture(Math.floor(N / 2) + 1);
-    const fLast2 = await session.capture(N - 2);
-    const fLast = await session.capture(N - 1);
-    const fN = await session.capture(N);
-    const f0again = await session.capture(0);
 
-    const det = meanAbsDiff(f0, f0again);
-    console.log(`determinism   frame 0 vs frame 0 again: mean ${det.mean.toFixed(4)} max ${det.max}`);
-    if (det.max !== 0) failures.push("frame 0 is not deterministic");
-
-    const close = meanAbsDiff(f0, fN);
-    console.log(`closure       frame 0 vs frame ${N}:      mean ${close.mean.toFixed(4)} max ${close.max}`);
-    // The scene uses a floating origin, so phase 1.0 should give the same geometry as phase 0.0 to the bit.
-    // Allow one level of rounding. A loose threshold here once hid a panel pattern that changed every lap.
-    if (close.max > 1) failures.push(`frame ${N} differs from frame 0 (mean ${close.mean.toFixed(4)}, max ${close.max})`);
-
-    // Frame 0 is a bar downbeat: lights flash and the lens kicks. So the fair comparison for the seam step
-    // is the same musical event elsewhere in the loop, not an ordinary frame step.
-    const framesPerBar = (N / session.loop.beats) * spec.beatsPerBar;
-    if (!Number.isInteger(framesPerBar)) throw new Error("bar length is not a whole number of frames");
-    const downbeatSteps: number[] = [];
-    for (const bar of [1, Math.floor(spec.bars / 2), spec.bars - 1]) {
-      const f = bar * framesPerBar;
-      const step = meanAbsDiff(await session.capture(f - 1), await session.capture(f)).mean;
-      console.log(`downbeat step ${f - 1} -> ${f}: mean ${step.toFixed(3)}`);
-      downbeatSteps.push(step);
+    // Two probe frames inside each zone: one at 30% and one at 70% of the zone, off the beat grid.
+    const slots = layoutTrack(session.loop);
+    const framesPerBeat = N / session.loop.beats;
+    const probes: { zone: string; frame: number }[] = [{ zone: "start", frame: 0 }];
+    for (const zone of ZONES) {
+      const own = slots.filter((s) => s.zone === zone);
+      for (const at of [0.3, 0.7]) {
+        const beat = own[0]!.index + own.length * at + 0.37;
+        probes.push({ zone, frame: Math.round(beat * framesPerBeat) });
+      }
     }
-    console.log(`plain step    0 -> 1: mean ${meanAbsDiff(f0, f1).mean.toFixed(3)}`);
-    console.log(`plain step    mid -> mid+1: mean ${meanAbsDiff(fMid, fMid1).mean.toFixed(3)}`);
-    console.log(`plain step    N-2 -> N-1: mean ${meanAbsDiff(fLast2, fLast).mean.toFixed(3)}`);
-    const seam = meanAbsDiff(fLast, f0).mean;
-    console.log(`seam          N-1 -> 0: mean ${seam.toFixed(3)}`);
-    const worst = Math.max(...downbeatSteps);
-    if (seam > worst * 1.5) failures.push(`seam step ${seam.toFixed(3)} is more than 1.5x the largest downbeat step ${worst.toFixed(3)}`);
-    if (seam === 0) failures.push("seam step is zero: the last frame duplicates the first, which would stutter");
+    for (const p of probes) {
+      const a = await session.capture(p.frame);
+      const b = await session.capture(p.frame + N);
+      const d = diff(a, b);
+      console.log(`closure  ${p.zone.padEnd(6)} frame ${String(p.frame).padStart(4)} vs ${p.frame + N}: mean ${d.mean.toFixed(4)} max ${d.max}`);
+      // The scene uses a floating origin, so one lap later the geometry is the same to the bit.
+      // Allow one level of rounding. A loose threshold here once hid a panel pattern that changed every lap.
+      if (d.max > 1) failures.push(`${p.zone}: frame ${p.frame + N} differs from frame ${p.frame} (mean ${d.mean.toFixed(4)}, max ${d.max})`);
+    }
+
+    const again = diff(f0, await session.capture(0));
+    console.log(`determinism  frame 0 again after ${probes.length * 2} other frames: max ${again.max}`);
+    if (again.max !== 0) failures.push("frame 0 is not deterministic");
+
+    const seam = diff(await session.capture(N - 1), f0);
+    console.log(`seam step    ${N - 1} -> 0: mean ${seam.mean.toFixed(3)}`);
+    if (seam.max === 0) failures.push("the last frame equals the first, so the loop point would stutter");
   } finally {
     await session.close();
   }
-  if (failures.length) {
-    for (const f of failures) console.error(`FAIL: ${f}`);
-    process.exit(1);
-  }
+  for (const f of failures) console.error(`FAIL: ${f}`);
+  if (failures.length) process.exit(1);
   console.log("PASS");
 }
 

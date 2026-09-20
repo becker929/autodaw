@@ -3,6 +3,7 @@
 import * as THREE from "three";
 import { layoutTrack, type Zone } from "../core/layout";
 import { cycle, mod, pulse, relAhead, rng, wave, type Loop, type Time } from "../core/timeline";
+import { FOG_DENSITY } from "./fog";
 import { boxMesh, driveGlows, makeKit, type FactoryModule, type Kit, type ModuleBuilder } from "./kit";
 import { buildForge } from "./zones/forge";
 import { buildHall } from "./zones/hall";
@@ -91,9 +92,9 @@ export function buildWorld(loop: Loop, renderer: THREE.WebGLRenderer): World {
   const kit = makeKit(loop);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  scene.fog = new THREE.FogExp2(0x000000, 0.0105);
+  scene.fog = new THREE.FogExp2(0x000000, FOG_DENSITY);
   scene.environment = bakeEnvironment(renderer);
-  scene.environmentIntensity = 1.0;
+  scene.environmentIntensity = 0.7;
 
   const { width, height } = loop.spec;
   const camera = new THREE.PerspectiveCamera(84, width / height, 0.1, DRAW_AHEAD + 40);
@@ -119,9 +120,8 @@ export function buildWorld(loop: Loop, renderer: THREE.WebGLRenderer): World {
       const beatPulse = pulse(cycle(loop, t.beat, 1), 4.5);
       const barPulse = pulse(cycle(loop, t.beat, loop.spec.beatsPerBar), 2.2);
       driveGlows(kit, beatPulse, barPulse);
-      kit.uBeat.value = t.beat;
-      kit.uPhase.value = t.phase;
-      lamp.intensity = 5 + 14 * beatPulse;
+      kit.uCycles.value.set(cycle(loop, t.beat, 1), cycle(loop, t.beat, 2), cycle(loop, t.beat, 4), cycle(loop, t.beat, 8));
+      lamp.intensity = 2 + 4 * beatPulse;
 
       // Floating origin: the camera stays at z = 0 and the track slides past it. World positions then
       // depend only on the wrapped track position, so phase 1 gives bit-identical geometry to phase 0.
@@ -129,7 +129,7 @@ export function buildWorld(loop: Loop, renderer: THREE.WebGLRenderer): World {
       kit.uTrackZ.value = mod(t.camZ, loop.length);
       // A slow roll and a kick of field of view on the beat. Whole turns per loop only.
       camera.rotation.set(0.012 * wave(t, 5), 0, 0.09 * wave(t, 2) + 0.03 * wave(t, 10, 0.25));
-      camera.fov = 84 + 5 * beatPulse + 4 * barPulse;
+      camera.fov = 84 + 2.5 * beatPulse + 2.5 * barPulse;
       camera.updateProjectionMatrix();
 
       for (const m of modules) {

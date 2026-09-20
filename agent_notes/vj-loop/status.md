@@ -19,8 +19,16 @@
 
 ## Open items
 
-See the list at the end of this file. Update it when things change.
-
 - Docker was not running on 2026-09-20, so checks ran on the host, not in a container.
-- The repo has no CI workflow. `npm run check` is the check. `npm run seamcheck` needs a GPU or software GL.
+- The repo has no CI workflow. `npm run check` is the check. `npm run seamcheck` and `npm run flashcheck` need a GPU or software GL.
 - Chrome reflections come from one baked environment map. They do not show neighboring machines.
+- The render page crashed once ("Target crashed") at about frame 1200 of a small full-loop run on 2026-09-20. The cause is unknown. It did not repeat on the next run. The session now restarts the browser and retries the frame; that recovery is proven by killing the renderer process mid-render and getting a bit-identical video.
+- H.264 at 4:2:0 softens thin neon lines (red and blue PSNR about 33 dB against the source, green about 42 dB). Use `--codec prores` when that matters.
+- VJ software often prefers HAP or DXV. ffmpeg here was not checked for a HAP encoder. `--gop 1` is the nearest option today.
+- The flash check is an estimate, not a certified Harding test. Get a certified test before any broadcast use.
+
+## Gotchas
+
+- When killing a test browser, kill by exact PID. A pattern like "chrom" also matches the user's own Chrome tabs.
+- Any shader pattern indexed along the track must wrap its index by the cells per lap. The panel shader once changed every panel's finish each lap, and only the seam test caught it.
+- Do not drive a shader from raw time. Float rounding of a large beat value flipped one spark across its wrap. Pass cycle positions from `cycle()`.

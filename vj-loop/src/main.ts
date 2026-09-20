@@ -19,6 +19,7 @@ declare global {
 }
 
 let pipeline: Pipeline | null = null;
+let gl: WebGLRenderingContext | WebGL2RenderingContext | null = null;
 const canvas = document.getElementById("c") as HTMLCanvasElement;
 
 window.__vj = {
@@ -30,14 +31,16 @@ window.__vj = {
     renderer.toneMapping = THREE.NoToneMapping;
     const world = buildWorld(loop, renderer);
     pipeline = buildPipeline(renderer, world, loop);
-    const gl = renderer.getContext();
+    gl = renderer.getContext();
     const ext = gl.getExtension("WEBGL_debug_renderer_info");
     const gpu = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : "unknown";
     return { frames: loop.frames, seconds: loop.seconds, gpu };
   },
   renderFrame(frame) {
-    if (!pipeline) throw new Error("init first");
+    if (!pipeline || !gl) throw new Error("init first");
     pipeline.renderFrame(frame);
+    // A lost context draws nothing and raises no error. The frame would be black, so fail loudly instead.
+    if (gl.isContextLost()) throw new Error(`The WebGL context was lost at frame ${frame}. The GPU was reset or ran out of memory.`);
   },
   capture(frame) {
     this.renderFrame(frame);

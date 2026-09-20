@@ -1,7 +1,7 @@
 // Zone 3: the nanite chamber. The tunnel widens. A swarm of tiny chrome bodies flows around the rail
 // and snaps into a lattice on every second bar. The swarm moves in the vertex shader.
 import * as THREE from "three";
-import { cycle, type Rng } from "../../core/timeline";
+import type { Rng } from "../../core/timeline";
 import { instancedBoxes, onRing, railBed, ringFrame, type Kit, type ModuleBuilder, type Placement } from "../kit";
 import { FLOOR_Y } from "./iris";
 
@@ -105,10 +105,10 @@ export const buildNanite: ModuleBuilder = (kit, slot, rand) => {
 
   return {
     group,
-    update(t) {
+    update() {
       // Written by every nanite module each render. The value is the same for all of them.
       const s = getShared(kit);
-      const c8 = cycle(kit.loop, t.beat, 8);
+      const c8 = kit.uCycles.value.w; // the 8-beat cycle, set by the world from cycle()
       // Snap to the lattice on beats 5-8 of each 8, with a fast attack and slow release.
       const snap = Math.min(smooth(0.5, 0.56, c8), 1 - smooth(0.9, 1.0, c8));
       s.uSwarm.value.set(c8, snap, len);

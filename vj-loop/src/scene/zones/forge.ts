@@ -12,6 +12,7 @@ import {
   type Kit,
   type ModuleBuilder,
 } from "../kit";
+import { FOG_DENSITY } from "../fog";
 import { FLOOR_Y, R } from "./iris";
 
 interface Arm {
@@ -66,21 +67,29 @@ function jointDisc(kit: Kit, r: number): THREE.Mesh {
 }
 
 const SPARK_VS = /* glsl */ `
-  uniform float uBeat;
+  uniform vec4 uCycles;      // positions in the 1, 2, 4, 8 beat cycles
   uniform float uSecPerBeat;
+  uniform float uFogDensity;
   uniform float uSize;
   attribute vec4 aVel;   // xyz velocity, w life in beats (1, 2 or 4)
   attribute float aSeed;
   varying float vFade;
   void main() {
     float life = aVel.w;
-    float age = fract(uBeat / life + aSeed);      // 0..1, repeats with the loop because life divides it
+    // The cycle positions come from cycle() in JS, which refuses any period that does not divide the loop.
+    float c = life < 1.5 ? uCycles.x : (life < 3.0 ? uCycles.y : uCycles.z);
+    float age = fract(c + aSeed);
     float s = age * life * uSecPerBeat;
     vec3 p = position + aVel.xyz * s + vec3(0.0, -9.0, 0.0) * s * s;
     vFade = (1.0 - age) * (1.0 - age);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = uSize * vFade / max(0.5, -mv.z);
+    float size = uSize * vFade / max(0.5, -mv.z);
+    gl_PointSize = max(size, 1.0);
+    // Points cannot be smaller than one pixel, so a far spark would stay a full-bright dot. Dim it by its
+    // true area instead. Sparks also take the scene fog, or they show through it from far down the track.
+    float fogDepth = -mv.z * uFogDensity;
+    vFade *= min(1.0, size * size) * exp(-fogDepth * fogDepth);
   }
 `;
 const SPARK_FS = /* glsl */ `
@@ -95,8 +104,13 @@ const SPARK_FS = /* glsl */ `
 function sparkMaterial(kit: Kit): THREE.ShaderMaterial {
   const { height, bpm } = kit.loop.spec;
   return new THREE.ShaderMaterial({
-    // uBeat is the kit's shared uniform object, so the world drives every spark system at once.
-    uniforms: { uBeat: kit.uBeat, uSecPerBeat: { value: 60 / bpm }, uSize: { value: height * 0.018 } },
+    // uCycles is the kit's shared uniform object, so the world drives every spark system at once.
+    uniforms: {
+      uCycles: kit.uCycles,
+      uSecPerBeat: { value: 60 / bpm },
+      uSize: { value: height * 0.018 },
+      uFogDensity: { value: FOG_DENSITY },
+    },
     vertexShader: SPARK_VS,
     fragmentShader: SPARK_FS,
     blending: THREE.AdditiveBlending,

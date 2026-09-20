@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { layoutTrack, ZONES } from "../src/core/layout";
+import { layoutTrack, SCENE_CYCLES, validateSceneLoop, ZONES } from "../src/core/layout";
 import { cycle, deriveLoop, hash01, LoopSpec, relAhead, rng, stepNoise, timeAt, wave } from "../src/core/timeline";
 
 const loop = deriveLoop(LoopSpec.parse({}));
@@ -92,9 +92,16 @@ describe("layout", () => {
     expect(slots.filter((s) => s.downbeat)).toHaveLength(20);
     expect(slots[0]!.downbeat).toBe(true);
   });
-  it("refuses a loop that does not split into equal zones", () => {
-    expect(() => layoutTrack(deriveLoop(LoopSpec.parse({ bars: 5, bpm: 150 })))).not.toThrow();
-    expect(() => layoutTrack(deriveLoop(LoopSpec.parse({ bars: 5, beatsPerBar: 3, bpm: 150 })))).toThrow(/equal zones/);
+  it("refuses a loop the scene cannot animate, and says why", () => {
+    // 12 beats split into 4 zones, but the scene has an 8-beat cycle. This once died minutes into a render.
+    expect(() => validateSceneLoop(deriveLoop(LoopSpec.parse({ bars: 3, bpm: 120 })))).toThrow(/8-beat cycle/);
+    expect(() => validateSceneLoop(deriveLoop(LoopSpec.parse({ bars: 5, bpm: 150 })))).toThrow(/8-beat cycle/);
+    expect(() => validateSceneLoop(deriveLoop(LoopSpec.parse({ bars: 3, beatsPerBar: 3, bpm: 108 })))).toThrow(/equal zones/);
+    expect(() => validateSceneLoop(deriveLoop(LoopSpec.parse({ unitsPerBeat: 1 })))).toThrow(/unitsPerBeat/);
+    expect(() => validateSceneLoop(deriveLoop(LoopSpec.parse({ bars: 16, bpm: 128 })))).not.toThrow();
+  });
+  it("needs every scene cycle to divide the default loop", () => {
+    for (const c of SCENE_CYCLES) expect(loop.beats % c).toBe(0);
   });
 });
 

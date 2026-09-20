@@ -50,7 +50,8 @@ export const buildIris: ModuleBuilder = (kit, slot, rand) => {
     update(_t, rel) {
       // Shut when far. Opens late, so the sled seems to just clear the blades. Fully open half a beat away.
       const open = 1 - smoothstep(len * 0.5, len * 1.9, rel);
-      const rc = THREE.MathUtils.lerp(R * 0.5, R * 1.4, open);
+      // Shut, the blades overlap past the centre, so nothing behind the gate shows through.
+      const rc = THREE.MathUtils.lerp(R * 0.42, R * 1.4, open);
       blades.forEach((b, i) => {
         const a = (i / BLADES) * Math.PI * 2 + open * 0.5;
         b.position.set(Math.cos(a) * rc, Math.sin(a) * rc, 0);

@@ -9,7 +9,8 @@
     "check": "npm run typecheck && npm run test",
     "still": "tsx scripts/render.ts --still",
     "render": "tsx scripts/render.ts",
-    "seamcheck": "tsx scripts/seamcheck.ts"
+    "seamcheck": "tsx scripts/seamcheck.ts",
+    "flashcheck": "tsx scripts/flashcheck.ts"
   },
   "dependencies": {
     "three": "^0.186.0",

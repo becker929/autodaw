@@ -42,11 +42,14 @@ const FINAL_FS = /* glsl */ `
       texture2D(tAccum, vUv + off).r,
       texture2D(tAccum, vUv).g,
       texture2D(tAccum, vUv - off).b);
-    hdr *= 1.0 - 0.75 * r2;                       // vignette
+    hdr *= 1.0 - 1.15 * r2;                       // vignette
     vec3 col = aces(hdr * 0.9);
     col = pow(col, vec3(1.0 / 2.2));
+    // A toe: pull the darkest tones to true black. On an LED wall, a grey pedestal lights every pixel.
+    col = max(col - 0.045, 0.0) / (1.0 - 0.045);
     // Grain also hides banding in the dark gradients after video compression.
-    col += (hash(gl_FragCoord.xy + uGrainSeed) - 0.5) * 0.018;
+    // Scaled by brightness, so black stays black.
+    col += (hash(gl_FragCoord.xy + uGrainSeed) - 0.5) * 0.03 * smoothstep(0.0, 0.12, max(col.r, max(col.g, col.b)));
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -73,7 +76,7 @@ export function buildPipeline(renderer: THREE.WebGLRenderer, world: World, loop:
   const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(width, height, hdr));
   composer.renderToScreen = false;
   composer.addPass(new RenderPass(world.scene, world.camera));
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(width, height), 0.4, 0.55, 1.1));
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(width, height), 0.22, 0.5, 1.5));
 
   const accum = new THREE.WebGLRenderTarget(width, height, { type: THREE.HalfFloatType, depthBuffer: false });
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
