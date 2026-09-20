@@ -15,6 +15,7 @@ audio-browser/**/__pycache__/
 audio-browser/frontend/node_modules/
 audio-browser/frontend/.next/
 audio-browser/*.db
+audio-browser/slice-cache/
 audio-browser/*.db-wal
 audio-browser/*.db-shm
 audio-browser/config.toml
