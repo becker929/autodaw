@@ -1,3 +1,5 @@
+> **Archived 30 September 2026.** Development continues in [zpkt](https://github.com/becker929/zpkt), at `engineer/src/engineer/search/` (the genetic algorithm) and `prototypes/audio-browser/` (the audio browser and collage, from the `feature/audio-browser` branch). The REAPER/Serum system and the `feature/vj-loop` branch remain only here. History was carried over with the code. Before archiving, the security fixes made in zpkt were applied here (services bound to loopback, authentication added, unsafe input handling fixed). Even so, do not run this code exposed to a network.
+
 # AutoDAW - Automated Digital Audio Workstation
 
 A web-based genetic algorithm optimization system combining GA+JSI+Audio Oracle for automated digital audio workstation parameter tuning.

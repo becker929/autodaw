@@ -275,7 +275,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "autodaw.backend.main:app",
-        host="0.0.0.0",
+        host="127.0.0.1",  # loopback only; archived, see zpkt
         port=8000,
         reload=True,
         log_level="info"
